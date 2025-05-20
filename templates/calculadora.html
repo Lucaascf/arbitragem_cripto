@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparação Spot vs. Futuros</title>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .calculator {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .calculator-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .calculator-section h2 {
+            margin-top: 0;
+            color: #3498db;
+            font-size: 1.2em;
+        }
+        .price-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #2c3e50;
+        }
+        .exchange-name {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .profit-loss {
+            font-size: 1.3em;
+            margin: 15px 0;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .positive {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        .negative {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+        }
+        .chart-container {
+            height: 500px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 200px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-box h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Comparação de Preços: Spot vs. Futuros</h1>
+        
+        <div class="chart-container" id="tradingview-chart"></div>
+        
+        <div class="calculator">
+            <div class="calculator-section">
+                <h2>Comprar (SPOT)</h2>
+                <div class="price-display" id="spot-price">0.1486</div>
+                <div class="exchange-name" id="spot-exchange">GATEIO</div>
+            </div>
+            
+            <div class="calculator-section">
+                <h2>Abrir Short (FUTURO)</h2>
+                <div class="price-display" id="future-price">0.14823</div>
+                <div class="exchange-name" id="future-exchange">MEXC</div>
+            </div>
+            
+            <div class="calculator-section">
+                <h2>Lucro da Entrada</h2>
+                <div class="profit-loss negative" id="entry-profit">-0.25%</div>
+            </div>
+        </div>
+        
+        <div class="calculator">
+            <div class="calculator-section">
+                <h2>Vender (SPOT)</h2>
+                <div class="price-display" id="sell-spot-price">0.14784</div>
+                <div class="exchange-name" id="sell-spot-exchange">GATEIO</div>
+            </div>
+            
+            <div class="calculator-section">
+                <h2>Fechar Short (FUTURO)</h2>
+                <div class="price-display" id="close-future-price">0.14831</div>
+                <div class="exchange-name" id="close-future-exchange">MEXC</div>
+            </div>
+            
+            <div class="calculator-section">
+                <h2>Lucro da Saída</h2>
+                <div class="profit-loss negative" id="exit-profit">-0.32%</div>
+            </div>
+        </div>
+        
+        <div class="calculator-section">
+            <h2>Calculadora de Saída</h2>
+            <div class="form-group">
+                <label for="entry-spot-price">Preço SPOT da entrada:</label>
+                <input type="number" id="entry-spot-price" step="0.00001" value="0.1486">
+            </div>
+            <div class="form-group">
+                <label for="entry-future-price">Preço do Abrir Short:</label>
+                <input type="number" id="entry-future-price" step="0.00001" value="0.14823">
+            </div>
+            
+            <table>
+                <tr>
+                    <th>Alvo</th>
+                    <th>Preço Futuro</th>
+                    <th>Diferença</th>
+                </tr>
+                <tr>
+                    <td>1%</td>
+                    <td id="target-1">0.14971</td>
+                    <td class="positive">+1.00%</td>
+                </tr>
+                <tr>
+                    <td>2%</td>
+                    <td id="target-2">0.15122</td>
+                    <td class="positive">+2.00%</td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <button id="calculate-btn">Calcular</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <h3>Cruzamentos (24h)</h3>
+                <div class="stat-value" id="crossings-24h">30</div>
+                <div class="stat-label">Vezes que spot e futuro convergiram</div>
+            </div>
+            
+            <div class="stat-box">
+                <h3>Cruzamentos (30min)</h3>
+                <div class="stat-value" id="crossings-30min">5</div>
+                <div class="stat-label">Vezes que spot e futuro convergiram</div>
+            </div>
+            
+            <div class="stat-box">
+                <h3>Volume SPOT (24h)</h3>
+                <div class="stat-value" id="spot-volume">8.74K</div>
+                <div class="stat-label">REQ</div>
+            </div>
+            
+            <div class="stat-box">
+                <h3>Diferença Atual</h3>
+                <div class="stat-value" id="current-diff">1.11%</div>
+                <div class="stat-label">GATEIO vs MEXC Futuros</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializa o gráfico do TradingView
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDT",
+            "interval": "15",
+            "timezone": "Etc/UTC",
+            "theme": "light",
+            "style": "1",
+            "locale": "br",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_top_toolbar": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "container_id": "tradingview-chart",
+            "studies": [
+                "BB@tv-basicstudies"
+            ],
+            "overrides": {
+                "paneProperties.background": "#ffffff",
+                "paneProperties.vertGridProperties.color": "#eeeeee",
+                "paneProperties.horzGridProperties.color": "#eeeeee"
+            }
+        });
+
+        // Função para buscar dados da API
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/comparacao');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Erro ao buscar dados:', data.error);
+                    return;
+                }
+                
+                // Atualiza a interface com os dados recebidos
+                updateUI(data);
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+            }
+        }
+        
+        // Função para atualizar a interface com os dados
+        function updateUI(data) {
+            if (data.data && data.data.length > 0) {
+                const firstPair = data.data[0];
+                
+                document.getElementById('spot-price').textContent = firstPair.preco_spot.toFixed(5);
+                document.getElementById('spot-exchange').textContent = firstPair.corretora_spot;
+                document.getElementById('future-price').textContent = firstPair.preco_futuros.toFixed(5);
+                document.getElementById('future-exchange').textContent = 'MEXC';
+                
+                const entryProfit = firstPair.diferenca;
+                const entryProfitElement = document.getElementById('entry-profit');
+                entryProfitElement.textContent = entryProfit.toFixed(2) + '%';
+                entryProfitElement.className = entryProfit >= 0 ? 'profit-loss positive' : 'profit-loss negative';
+                
+                document.getElementById('crossings-24h').textContent = data.total_crossings_24h;
+                document.getElementById('crossings-30min').textContent = data.total_crossings_30min;
+                document.getElementById('spot-volume').textContent = (firstPair.volume_spot / 1000).toFixed(2) + 'K';
+                document.getElementById('current-diff').textContent = firstPair.diferenca.toFixed(2) + '%';
+                
+                // Atualiza a calculadora
+                document.getElementById('entry-spot-price').value = firstPair.preco_spot.toFixed(5);
+                document.getElementById('entry-future-price').value = firstPair.preco_futuros.toFixed(5);
+                calculateTargets();
+            }
+        }
+        
+        // Função para calcular os alvos
+        function calculateTargets() {
+            const entrySpot = parseFloat(document.getElementById('entry-spot-price').value);
+            const entryFuture = parseFloat(document.getElementById('entry-future-price').value);
+            
+            if (isNaN(entrySpot) || isNaN(entryFuture)) return;
+            
+            // Calcula os preços alvo para 1% e 2%
+            const target1 = entryFuture * 1.01;
+            const target2 = entryFuture * 1.02;
+            
+            document.getElementById('target-1').textContent = target1.toFixed(5);
+            document.getElementById('target-2').textContent = target2.toFixed(5);
+        }
+        
+        // Event listeners
+        document.getElementById('calculate-btn').addEventListener('click', calculateTargets);
+        document.getElementById('entry-spot-price').addEventListener('change', calculateTargets);
+        document.getElementById('entry-future-price').addEventListener('change', calculateTargets);
+        
+        // Busca dados inicialmente e a cada 10 segundos
+        fetchData();
+        setInterval(fetchData, 10000);
+    </script>
+</body>
+</html>

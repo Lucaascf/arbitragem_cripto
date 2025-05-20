@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Criptomoedas</title>
+    <style>
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .last-updated {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        .coin-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .coin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .coin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .coin-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .price-difference {
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .positive {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        .negative {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+        }
+        .neutral {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: #2980b9;
+        }
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .price-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .price-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        .price-value {
+            font-size: 1.1rem;
+        }
+        .higher {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .lower {
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .equal {
+            color: #2c3e50;
+        }
+        .volume-value {
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+        .filter-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex-grow: 1;
+            max-width: 300px;
+        }
+        .filter-button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .filter-button:hover {
+            background-color: #2980b9;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .refresh-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .refresh-button:hover {
+            background-color: #27ae60;
+        }
+        .auto-refresh {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+        .crossing-badge {
+            background-color: #f39c12;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .price-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Estilos para filtros avançados */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background-color: white;
+            width: 100%;
+            max-width: 700px;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        .filter-row {
+            margin-bottom: 20px;
+        }
+        .filter-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        .range-inputs {
+            display: flex;
+            gap: 15px;
+        }
+        .range-input {
+            flex: 1;
+        }
+        .exchange-checkbox {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        .exchange-checkbox input[type="checkbox"] {
+            margin-right: 5px;
+            width: 18px;
+            height: 18px;
+        }
+        .coin-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .coin-checkbox {
+            display: flex;
+            align-items: center;
+        }
+        .coin-checkbox input[type="checkbox"] {
+            margin-right: 5px;
+            width: 16px;
+            height: 16px;
+        }
+        .coin-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #f39c12;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .filter-button-container {
+            text-align: right;
+            margin-bottom: 15px;
+        }
+        .advanced-filter-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .advanced-filter-button:hover {
+            background-color: #2980b9;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        /* Estilo para os checkbox com cor */
+        .colored-checkbox {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 5px;
+        }
+        .colored-box {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: #f39c12;
+            border-radius: 3px;
+            margin-right: 5px;
+            border: 1px solid #e67e22;
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #27ae60;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slide-in 0.3s ease-out, fade-out 0.5s ease-in 4.5s forwards;
+        }
+
+        @keyframes slide-in {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Comparador de Criptomoedas</h1>
+        <div class="auto-refresh">Dados atualizados automaticamente a cada <span id="refresh-interval">10</span> segundos</div>
+        <div class="last-updated">Última atualização: <span id="update-time"></span></div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total de Moedas</div>
+                <div class="stat-value" id="total-coins">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Diferença Média</div>
+                <div class="stat-value" id="avg-difference">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Melhor Oportunidade</div>
+                <div class="stat-value" id="best-opportunity">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Cruzamentos (24h)</div>
+                <div class="stat-value" id="total-crossings-24h">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Cruzamentos (30min)</div>
+                <div class="stat-value" id="total-crossings-30min">0</div>
+            </div>
+        </div>
+
+        <div class="filter-button-container">
+            <button id="advanced-filter-button" class="advanced-filter-button">Filtros Avançados</button>
+        </div>
+                
+        <div class="filter-container">
+            <input type="text" id="coin-filter" class="filter-input" placeholder="Filtrar por moeda (ex: BTC, ETH)...">
+            <button id="filter-button" class="filter-button">Filtrar</button>
+            <select id="sort-filter" class="filter-input">
+                <option value="difference">Ordenar por diferença (padrão)</option>
+                <option value="crossings_24h">Ordenar por cruzamentos (24h)</option>
+                <option value="crossings_30min">Ordenar por cruzamentos (30min)</option>
+                <option value="volume">Ordenar por volume</option>
+                <option value="symbol">Ordenar por símbolo</option>
+            </select>
+            <select id="difference-filter" class="filter-input">
+                <option value="all">Todas as diferenças</option>
+                <option value="positive">Apenas positivas</option>
+                <option value="negative">Apenas negativas</option>
+                <option value="significant">Significativas (>2%)</option>
+            </select>
+            <select id="volume-filter" class="filter-input">
+                <option value="all">Qualquer volume</option>
+                <option value="high">Alto volume (>1M)</option>
+                <option value="medium">Médio volume (>100K)</option>
+            </select>
+            <select id="limit-filter" class="filter-input">
+                <option value="10">Mostrar 10</option>
+                <option value="25">Mostrar 25</option>
+                <option value="50">Mostrar 50</option>
+                <option value="all">Mostrar todas</option>
+            </select>
+        </div>
+        
+        <div id="coin-container">
+            <div class="loading">Carregando dados...</div>
+        </div>
+
+        <button id="refresh-button" class="refresh-button">Atualizar Dados</button>
+    </div>
+
+    <script>
+        let allCoinsData = [];
+        let autoRefreshInterval;
+
+        // Adicione esta variável para armazenar o estado dos filtros
+        let filtrosAtivos = {
+            moeda: '',
+            diferenca: 'all',
+            volume: 'all',
+            ordenacao: 'difference', // Valor padrão: ordenar por diferença
+            limiteMoedas: '10' // Novo campo: valor padrão 10
+        };
+        
+        // Adicione aqui a nova variável ↓
+        let filtrosAvancados = {
+            corretoras: {
+                'MEXC': true,
+                'GATEIO': true,
+                'HTX': true
+            },
+            lucroMinimo: -10,
+            lucroMaximo: 100,
+            moedasSelecionadas: {} // Será preenchido com todas as moedas disponíveis
+        };
+
+        let dataCache = {
+            timestamp: 0,
+            data: []
+        };
+        
+        const CONSTANTS = {
+            AUTO_REFRESH_INTERVAL: 10000,
+            FILTER_DEBOUNCE_DELAY: 300,
+            VOLUME_THRESHOLD: {
+                HIGH: 1000000,
+                MEDIUM: 100000
+            }
+        };
+
+        function debounce(func, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function mostrarNotificacao(mensagem, tipo = 'success') {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.style.backgroundColor = tipo === 'success' ? '#27ae60' : '#e74c3c';
+            notif.textContent = mensagem;
+            document.body.appendChild(notif);
+            
+            // Remover após 5 segundos
+            setTimeout(() => {
+                document.body.removeChild(notif);
+            }, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializa a atualização automática
+            fetchData();
+            setupAutoRefresh();
+            
+            // Atualiza o texto do intervalo de atualização na UI
+            document.getElementById('refresh-interval').textContent = CONSTANTS.AUTO_REFRESH_INTERVAL / 1000;
+            
+            // Inicializa todos os event listeners
+            initEventListeners();
+        });
+
+        // E adicione esta função depois:
+        function initEventListeners() {
+            // Filtros básicos
+            document.getElementById('filter-button').addEventListener('click', aplicarFiltros);
+            document.getElementById('difference-filter').addEventListener('change', aplicarFiltros);
+            document.getElementById('volume-filter').addEventListener('change', aplicarFiltros);
+            document.getElementById('sort-filter').addEventListener('change', aplicarFiltros);
+            document.getElementById('refresh-button').addEventListener('click', manualRefresh);
+            document.getElementById('limit-filter').addEventListener('change', aplicarFiltros);
+            
+            // Filtro por digitação com debounce
+            const debouncedFiltro = debounce(aplicarFiltros, CONSTANTS.FILTER_DEBOUNCE_DELAY);
+            document.getElementById('coin-filter').addEventListener('input', debouncedFiltro);
+
+            // Filtros avançados
+            document.getElementById('advanced-filter-button').addEventListener('click', abrirModalFiltrosAvancados);
+            document.getElementById('modal-close').addEventListener('click', fecharModalFiltrosAvancados);
+            document.getElementById('apply-filters').addEventListener('click', aplicarFiltrosAvancados);
+            document.getElementById('reset-filters').addEventListener('click', resetarFiltrosAvancados);
+            document.getElementById('select-all-coins').addEventListener('click', selecionarTodasMoedas);
+            document.getElementById('deselect-all-coins').addEventListener('click', desmarcarTodasMoedas);
+            document.getElementById('coin-search').addEventListener('input', filtrarGridMoedas);
+            
+            // Fechar modal ao clicar fora
+            document.getElementById('filtros-avancados-modal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    fecharModalFiltrosAvancados();
+                }
+            });
+        }
+        
+        // Função para abrir o modal de filtros avançados
+        function abrirModalFiltrosAvancados() {
+            // Preencher o modal com as moedas disponíveis
+            popularGridMoedas();
+            
+            // Configurar valores atuais
+            document.getElementById('lucro-minimo').value = filtrosAvancados.lucroMinimo;
+            document.getElementById('lucro-maximo').value = filtrosAvancados.lucroMaximo;
+            
+            document.getElementById('mexc-spot').checked = filtrosAvancados.corretoras['MEXC'];
+            document.getElementById('gateio-spot').checked = filtrosAvancados.corretoras['GATEIO'];
+            document.getElementById('htx-spot').checked = filtrosAvancados.corretoras['HTX'];
+            
+            // Exibir o modal
+            document.getElementById('filtros-avancados-modal').style.display = 'flex';
+        }
+
+        // Função para popular a grid de moedas
+        function popularGridMoedas() {
+            const coinGrid = document.getElementById('coin-grid');
+            coinGrid.innerHTML = '';
+            
+            // Obter todas as moedas únicas
+            const moedasUnicas = [...new Set(allCoinsData.map(moeda => moeda.simbolo))];
+            
+            // Inicializar moedasSelecionadas se estiver vazio
+            if (Object.keys(filtrosAvancados.moedasSelecionadas).length === 0) {
+                moedasUnicas.forEach(moeda => {
+                    filtrosAvancados.moedasSelecionadas[moeda] = true;
+                });
+            }
+            
+            // Adicionar cada moeda ao grid
+            moedasUnicas.sort().forEach(moeda => {
+                const simboloLimpo = moeda.replace(/USDT$/, '');
+                
+                const coinCheckbox = document.createElement('div');
+                coinCheckbox.className = 'coin-checkbox';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `coin-${moeda}`;
+                checkbox.checked = filtrosAvancados.moedasSelecionadas[moeda] || false;
+                checkbox.addEventListener('change', () => {
+                    filtrosAvancados.moedasSelecionadas[moeda] = checkbox.checked;
+                });
+                
+                const label = document.createElement('label');
+                label.htmlFor = `coin-${moeda}`;
+                label.textContent = simboloLimpo;
+                
+                coinCheckbox.appendChild(checkbox);
+                coinCheckbox.appendChild(label);
+                coinGrid.appendChild(coinCheckbox);
+            });
+        }
+
+        // Função para filtrar moedas no grid de busca
+        function filtrarGridMoedas() {
+            const searchTerm = document.getElementById('coin-search').value.toLowerCase();
+            const checkboxes = document.querySelectorAll('.coin-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                const label = checkbox.querySelector('label');
+                const moeda = label.textContent.toLowerCase();
+                
+                if (moeda.includes(searchTerm)) {
+                    checkbox.style.display = 'flex';
+                } else {
+                    checkbox.style.display = 'none';
+                }
+            });
+        }
+
+        // Função para selecionar todas as moedas
+        function selecionarTodasMoedas() {
+            const checkboxes = document.querySelectorAll('.coin-checkbox input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+                const moeda = checkbox.id.replace('coin-', '');
+                filtrosAvancados.moedasSelecionadas[moeda] = true;
+            });
+        }
+
+        // Função para desmarcar todas as moedas
+        function desmarcarTodasMoedas() {
+            const checkboxes = document.querySelectorAll('.coin-checkbox input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                const moeda = checkbox.id.replace('coin-', '');
+                filtrosAvancados.moedasSelecionadas[moeda] = false;
+            });
+        }
+
+        // Função para aplicar filtros avançados
+        function aplicarFiltrosAvancados() {
+            // Atualizar configurações de corretoras
+            filtrosAvancados.corretoras['MEXC'] = document.getElementById('mexc-spot').checked;
+            filtrosAvancados.corretoras['GATEIO'] = document.getElementById('gateio-spot').checked;
+            filtrosAvancados.corretoras['HTX'] = document.getElementById('htx-spot').checked;
+            
+            // Atualizar configurações de lucro
+            filtrosAvancados.lucroMinimo = parseFloat(document.getElementById('lucro-minimo').value);
+            filtrosAvancados.lucroMaximo = parseFloat(document.getElementById('lucro-maximo').value);
+            
+            // Aplicar filtros
+            aplicarFiltrosEExibir();
+            
+            // Fechar o modal
+            fecharModalFiltrosAvancados();
+        }
+
+        // Função para resetar os filtros avançados
+        function resetarFiltrosAvancados() {
+            filtrosAvancados = {
+                corretoras: {
+                    'MEXC': true,
+                    'GATEIO': true,
+                    'HTX': true
+                },
+                lucroMinimo: -10,
+                lucroMaximo: 100,
+                moedasSelecionadas: {}
+            };
+            
+            // Preencher moedas selecionadas com todas disponíveis
+            allCoinsData.forEach(moeda => {
+                filtrosAvancados.moedasSelecionadas[moeda.simbolo] = true;
+            });
+            
+            // Atualizar UI
+            document.getElementById('lucro-minimo').value = filtrosAvancados.lucroMinimo;
+            document.getElementById('lucro-maximo').value = filtrosAvancados.lucroMaximo;
+            
+            document.getElementById('mexc-spot').checked = true;
+            document.getElementById('gateio-spot').checked = true;
+            document.getElementById('htx-spot').checked = true;
+            
+            // Atualizar grid de moedas
+            popularGridMoedas();
+        }
+
+        // Função para fechar o modal
+        function fecharModalFiltrosAvancados() {
+            document.getElementById('filtros-avancados-modal').style.display = 'none';
+        }
+
+        // Atualizar a função aplicarFiltrosEExibir para incluir os filtros avançados
+        function aplicarFiltrosEExibir() {
+            // Filtra os dados com base nos filtros ativos
+            const dadosFiltrados = allCoinsData.filter(moeda => {
+                // Remove USDT para comparação no filtro de moeda
+                const simboloLimpo = moeda.simbolo.replace(/USDT$/, '').toLowerCase();
+                const moedaMatch = simboloLimpo.includes(filtrosAtivos.moeda);
+                
+                let diferencaMatch = true;
+                let volumeMatch = true;
+                
+                if (filtrosAtivos.diferenca === 'positive') diferencaMatch = moeda.diferenca > 0;
+                else if (filtrosAtivos.diferenca === 'negative') diferencaMatch = moeda.diferenca < 0;
+                else if (filtrosAtivos.diferenca === 'significant') diferencaMatch = Math.abs(moeda.diferenca) > 2;
+                
+                const volumeTotal = moeda.volume_spot + moeda.volume_futuros;
+                if (filtrosAtivos.volume === 'high') volumeMatch = volumeTotal >= CONSTANTS.VOLUME_THRESHOLD.HIGH;
+                else if (filtrosAtivos.volume === 'medium') volumeMatch = volumeTotal >= CONSTANTS.VOLUME_THRESHOLD.MEDIUM;
+                
+                // Filtros avançados
+                const corretoraMatch = filtrosAvancados.corretoras[moeda.corretora_spot];
+                const moedaSelecionada = filtrosAvancados.moedasSelecionadas[moeda.simbolo] !== false; // Se não estiver definido, considera true
+                const lucroMinMatch = moeda.diferenca >= filtrosAvancados.lucroMinimo;
+                const lucroMaxMatch = moeda.diferenca <= filtrosAvancados.lucroMaximo;
+                
+                return moedaMatch && diferencaMatch && volumeMatch && 
+                    corretoraMatch && moedaSelecionada && lucroMinMatch && lucroMaxMatch;
+            });
+            
+            // Ordena os dados com base na opção selecionada
+            dadosFiltrados.sort((a, b) => {
+                switch(filtrosAtivos.ordenacao) {
+                    case 'crossings_24h':
+                        return b.crossings_24h - a.crossings_24h; // Ordem decrescente
+                    case 'crossings_30min':
+                        return b.crossings_30min - a.crossings_30min; // Ordem decrescente
+                    case 'volume':
+                        const volumeA = a.volume_spot + a.volume_futuros;
+                        const volumeB = b.volume_spot + b.volume_futuros;
+                        return volumeB - volumeA; // Ordem decrescente
+                    case 'symbol':
+                        return a.simbolo.localeCompare(b.simbolo); // Ordem alfabética
+                    case 'difference':
+                    default:
+                        return Math.abs(b.diferenca) - Math.abs(a.diferenca); // Ordem decrescente por diferença absoluta
+                }
+            });
+            
+            // Aplica o limite de moedas - ESTE É O CÓDIGO QUE ESTAVA NO LUGAR ERRADO
+            const dadosLimitados = filtrosAtivos.limiteMoedas === 'all' 
+                ? dadosFiltrados 
+                : dadosFiltrados.slice(0, parseInt(filtrosAtivos.limiteMoedas));
+            
+            // Exibe os dados limitados e não os dados filtrados
+            exibirDados(dadosLimitados);
+        }
+
+        function setupAutoRefresh() {
+            // Limpa qualquer intervalo existente
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            // Configura novo intervalo (30 segundos)
+            autoRefreshInterval = setInterval(fetchData, CONSTANTS.AUTO_REFRESH_INTERVAL);
+        }
+        
+        function manualRefresh() {
+            const btn = document.getElementById('refresh-button');
+            const originalText = btn.textContent;
+            
+            // Criar e adicionar spinner
+            const spinner = document.createElement('span');
+            spinner.className = 'loading-spinner';
+            btn.innerHTML = '';
+            btn.appendChild(spinner);
+            btn.appendChild(document.createTextNode(' Atualizando...'));
+            btn.disabled = true;
+            
+            // Busca dados
+            fetchData().finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        function fetchData() {
+            // Verificar idade do cache (10 segundos)
+            const now = Date.now();
+            const cacheAge = now - dataCache.timestamp;
+            
+            // Se o cache estiver atualizado, use-o
+            if (dataCache.data.length > 0 && cacheAge < 10000) {
+                const updateTimeElement = document.getElementById('update-time');
+                updateTimeElement.textContent = new Date(dataCache.timestamp).toLocaleString('pt-BR');
+                
+                // Aplicar dados do cache
+                allCoinsData = dataCache.data;
+                calcularEstatisticas(allCoinsData);
+                aplicarFiltrosEExibir();
+                
+                // Retornar uma promise resolvida para compatibilidade
+                return Promise.resolve(dataCache.data);
+            }
+            
+            // Caso contrário, buscar novos dados
+            const updateTimeElement = document.getElementById('update-time');
+            const originalText = updateTimeElement.textContent;
+            updateTimeElement.textContent = "Atualizando...";
+            
+            return fetch('/api/comparacao')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na rede');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Atualiza a data/hora
+            const now = new Date();
+            updateTimeElement.textContent = now.toLocaleString('pt-BR');
+            
+            // Guarda as moedas selecionadas anteriormente
+            const moedasSelecionadasAnterior = filtrosAvancados.moedasSelecionadas;
+            
+            // Armazena todos os dados para filtragem
+            allCoinsData = data.data || data; // Compatível com ambas estruturas
+            
+            // Adiciona novas moedas que não existiam antes
+            allCoinsData.forEach(moeda => {
+                if (moedasSelecionadasAnterior[moeda.simbolo] === undefined) {
+                    moedasSelecionadasAnterior[moeda.simbolo] = true;
+                }
+            });
+            
+            // Atualiza as moedas selecionadas
+            filtrosAvancados.moedasSelecionadas = moedasSelecionadasAnterior;
+            
+            // Calcula estatísticas com todos os dados
+            calcularEstatisticas(allCoinsData);
+            
+            // Aplica os filtros atuais nos novos dados em vez de mostrar todos
+            aplicarFiltrosEExibir();
+            
+            // ADICIONE AQUI: Verificar se há novas oportunidades significativas (>3%)
+            const oportunidadesSignificativas = allCoinsData.filter(moeda => Math.abs(moeda.diferenca) > 3);
+            if (oportunidadesSignificativas.length > 0) {
+                const melhor = oportunidadesSignificativas[0];
+                mostrarNotificacao(`Nova oportunidade: ${melhor.simbolo.replace(/USDT$/, '')} com ${melhor.diferenca.toFixed(2)}% de diferença!`);
+            }
+            
+            return data;
+        })
+                .catch(error => { /* código existente */ });
+        }
+        
+        function formatarVolume(volume) {
+            if (volume >= CONSTANTS.VOLUME_THRESHOLD.HIGH) {
+                return (volume / CONSTANTS.VOLUME_THRESHOLD.HIGH).toFixed(2) + 'M';
+            } else if (volume >= 1000) {
+                return (volume / 1000).toFixed(2) + 'K';
+            }
+            return volume.toFixed(2);
+        }
+
+        function exibirDados(dados) {
+            const container = document.getElementById('coin-container');
+            
+            if (!dados || dados.length === 0) {
+                container.innerHTML = '<div class="loading">Nenhum dado disponível</div>';
+                return;
+            }
+            
+            // Limpa o container mantendo o HTML para melhor performance
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            
+            dados.forEach(moeda => {
+                const diferenca = moeda.diferenca;
+                const classeDiferenca = diferenca > 0 ? 'positive' : (diferenca < 0 ? 'negative' : 'neutral');
+                const volumeTotal = moeda.volume_spot + moeda.volume_futuros;
+                const volumeFormatado = formatarVolume(volumeTotal);
+                
+                const spotClass = moeda.preco_spot > moeda.preco_futuros ? 'higher' : 
+                                (moeda.preco_spot < moeda.preco_futuros ? 'lower' : 'equal');
+                const futuresClass = moeda.preco_futuros > moeda.preco_spot ? 'higher' : 
+                                (moeda.preco_futuros < moeda.preco_spot ? 'lower' : 'equal');
+                
+                // Remove o sufixo USDT do símbolo da moeda
+                const simboloLimpo = moeda.simbolo.replace(/USDT$/, '');
+                
+                const card = document.createElement('div');
+                card.className = 'coin-card';
+                card.innerHTML = `
+                    <div class="coin-header">
+                        <div class="coin-name">${simboloLimpo}
+                            ${moeda.crossings_24h > 0 || moeda.crossings_30min > 0 ? 
+                                `<span class="crossing-badge" title="Cruzamentos recentes">${moeda.crossings_24h} | ${moeda.crossings_30min}</span>` : ''}
+                        </div>
+                        <div class="price-difference ${classeDiferenca}">
+                            ${diferenca > 0 ? '+' : ''}${diferenca.toFixed(2)}%
+                        </div>
+                    </div>
+                    
+                    <div class="price-grid">
+                        <div class="price-item">
+                            <div class="price-label">Spot (${moeda.corretora_spot})</div>
+                            <div class="price-value ${spotClass}">${moeda.preco_spot.toFixed(8)}</div>
+                        </div>
+                        <div class="price-item">
+                            <div class="price-label">Futuros (MEXC)</div>
+                            <div class="price-value ${futuresClass}">${moeda.preco_futuros.toFixed(8)}</div>
+                        </div>
+                        <div class="price-item">
+                            <div class="price-label">Volume Total (24h)</div>
+                            <div class="price-value volume-value">${volumeFormatado} USDT</div>
+                        </div>
+                        <div class="price-item">
+                            <div class="price-label">Arbitragem</div>
+                            <div class="price-value ${classeDiferenca}">
+                                ${diferenca > 0 ? 'Prêmio nos futuros' : (diferenca < 0 ? 'Prêmio no spot' : 'Sem diferença')}
+                            </div>
+                        </div>
+                        <div class="price-item">
+                            <div class="price-label">Cruzamentos</div>
+                            <div class="price-value">
+                                <span title="Últimas 24 horas">24h: ${moeda.crossings_24h}</span> | 
+                                <span title="Últimos 30 minutos">30m: ${moeda.crossings_30min}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function calcularEstatisticas(dados) {
+            if (!dados || dados.length === 0) return;
+            
+            // Total de moedas
+            document.getElementById('total-coins').textContent = dados.length;
+            
+            // Diferença média
+            const totalDiff = dados.reduce((sum, moeda) => sum + moeda.diferenca, 0);
+            const avgDiff = totalDiff / dados.length;
+            document.getElementById('avg-difference').textContent = avgDiff.toFixed(2) + '%';
+            
+            // Melhor oportunidade (maior diferença absoluta)
+            let melhorOportunidade = dados[0];
+            dados.forEach(moeda => {
+                if (Math.abs(moeda.diferenca) > Math.abs(melhorOportunidade.diferenca)) {
+                    melhorOportunidade = moeda;
+                }
+            });
+            
+            // Remove o sufixo USDT do símbolo da moeda na melhor oportunidade
+            const simboloLimpo = melhorOportunidade.simbolo.replace(/USDT$/, '');
+            
+            document.getElementById('best-opportunity').textContent = 
+                `${simboloLimpo} (${melhorOportunidade.diferenca > 0 ? '+' : ''}${melhorOportunidade.diferenca.toFixed(2)}%)`;
+            
+            // Total de cruzamentos
+            const total24h = dados.reduce((sum, moeda) => sum + moeda.crossings_24h, 0);
+            const total30min = dados.reduce((sum, moeda) => sum + moeda.crossings_30min, 0);
+            document.getElementById('total-crossings-24h').textContent = total24h;
+            document.getElementById('total-crossings-30min').textContent = total30min;
+        }
+        
+        function aplicarFiltros() {
+            // Salva o estado atual dos filtros
+            filtrosAtivos.moeda = document.getElementById('coin-filter').value.toLowerCase();
+            filtrosAtivos.diferenca = document.getElementById('difference-filter').value;
+            filtrosAtivos.volume = document.getElementById('volume-filter').value;
+            filtrosAtivos.ordenacao = document.getElementById('sort-filter').value;
+            filtrosAtivos.limiteMoedas = document.getElementById('limit-filter').value;
+            
+            // Aplica os filtros
+            aplicarFiltrosEExibir();
+        }
+    </script>
+    
+    <div class="modal-overlay" id="filtros-avancados-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Filtros Avançados</div>
+            <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-label">Lucro (%)</div>
+                    <div class="range-inputs">
+                        <div class="range-input">
+                            <label>Mínimo (%)</label>
+                            <input type="number" id="lucro-minimo" class="filter-input" value="-10" min="-100" max="100">
+                        </div>
+                        <div class="range-input">
+                            <label>Máximo (%)</label>
+                            <input type="number" id="lucro-maximo" class="filter-input" value="100" min="-100" max="1000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-label">Mostrar/ocultar corretora</div>
+                <div class="filter-group">
+                    <div class="exchange-checkbox">
+                        <span class="colored-box"></span>
+                        <input type="checkbox" id="mexc-spot" checked>
+                        <label for="mexc-spot">Mexc Spot</label>
+                    </div>
+                    <div class="exchange-checkbox">
+                        <span class="colored-box"></span>
+                        <input type="checkbox" id="gateio-spot" checked>
+                        <label for="gateio-spot">Gate.io Spot</label>
+                    </div>
+                    <div class="exchange-checkbox">
+                        <span class="colored-box"></span>
+                        <input type="checkbox" id="htx-spot" checked>
+                        <label for="htx-spot">HTX Spot</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-label">Selecionar moedas</div>
+                <input type="text" id="coin-search" class="coin-search" placeholder="Buscar moeda...">
+                <div class="action-buttons">
+                    <button id="select-all-coins" class="btn btn-secondary">Selecionar Todos</button>
+                    <button id="deselect-all-coins" class="btn btn-secondary">Desmarcar Todos</button>
+                </div>
+                <div id="coin-grid" class="coin-grid">
+                    <!-- As moedas serão adicionadas aqui dinamicamente -->
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="reset-filters" class="btn btn-danger">Resetar Filtros</button>
+            <button id="apply-filters" class="btn btn-primary">Aplicar Filtros</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
