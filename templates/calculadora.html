@@ -150,6 +150,60 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #27ae60;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slide-in 0.3s ease-out, fade-out 0.5s ease-in 4.5s forwards;
+        }
+        @keyframes slide-in {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+        
+    .add-btn {
+        margin-left: 5px;
+        background-color: #27ae60;
+    }
+    .remove-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        padding: 3px 8px;
+        cursor: pointer;
+    }
+    #targets-table {
+        margin-top: 15px;
+    }
+    #clear-targets-btn {
+        background-color: #95a5a6;
+        margin-left: 5px;
+    }
     </style>
 </head>
 <body>
@@ -161,38 +215,38 @@
         <div class="calculator">
             <div class="calculator-section">
                 <h2>Comprar (SPOT)</h2>
-                <div class="price-display" id="spot-price">0.1486</div>
-                <div class="exchange-name" id="spot-exchange">GATEIO</div>
+                <div class="price-display" id="spot-price">Carregando...</div>
+                <div class="exchange-name" id="spot-exchange">-</div>
             </div>
             
             <div class="calculator-section">
                 <h2>Abrir Short (FUTURO)</h2>
-                <div class="price-display" id="future-price">0.14823</div>
+                <div class="price-display" id="future-price">Carregando...</div>
                 <div class="exchange-name" id="future-exchange">MEXC</div>
             </div>
             
             <div class="calculator-section">
                 <h2>Lucro da Entrada</h2>
-                <div class="profit-loss negative" id="entry-profit">-0.25%</div>
+                <div class="profit-loss" id="entry-profit">0.00%</div>
             </div>
         </div>
         
         <div class="calculator">
             <div class="calculator-section">
                 <h2>Vender (SPOT)</h2>
-                <div class="price-display" id="sell-spot-price">0.14784</div>
-                <div class="exchange-name" id="sell-spot-exchange">GATEIO</div>
+                <div class="price-display" id="sell-spot-price">Carregando...</div>
+                <div class="exchange-name" id="sell-spot-exchange">-</div>
             </div>
             
             <div class="calculator-section">
                 <h2>Fechar Short (FUTURO)</h2>
-                <div class="price-display" id="close-future-price">0.14831</div>
+                <div class="price-display" id="close-future-price">Carregando...</div>
                 <div class="exchange-name" id="close-future-exchange">MEXC</div>
             </div>
             
             <div class="calculator-section">
                 <h2>Lucro da Saída</h2>
-                <div class="profit-loss negative" id="exit-profit">-0.32%</div>
+                <div class="profit-loss" id="exit-profit">0.00%</div>
             </div>
         </div>
         
@@ -200,89 +254,156 @@
             <h2>Calculadora de Saída</h2>
             <div class="form-group">
                 <label for="entry-spot-price">Preço SPOT da entrada:</label>
-                <input type="number" id="entry-spot-price" step="0.00001" value="0.1486">
+                <input type="number" id="entry-spot-price" step="0.00001" value="0">
             </div>
             <div class="form-group">
                 <label for="entry-future-price">Preço do Abrir Short:</label>
-                <input type="number" id="entry-future-price" step="0.00001" value="0.14823">
+                <input type="number" id="entry-future-price" step="0.00001" value="0">
+            </div>
+            <div class="form-group">
+                <label for="target-profit">Alvo de lucro desejado (%):</label>
+                <input type="number" id="target-profit" step="0.1" value="1" min="0.1" max="100">
+                <button id="add-target-btn" class="add-btn">Adicionar Alvo</button>
             </div>
             
-            <table>
-                <tr>
-                    <th>Alvo</th>
-                    <th>Preço Futuro</th>
-                    <th>Diferença</th>
-                </tr>
-                <tr>
-                    <td>1%</td>
-                    <td id="target-1">0.14971</td>
-                    <td class="positive">+1.00%</td>
-                </tr>
-                <tr>
-                    <td>2%</td>
-                    <td id="target-2">0.15122</td>
-                    <td class="positive">+2.00%</td>
-                </tr>
-                <tr>
-                    <td colspan="3">
-                        <button id="calculate-btn">Calcular</button>
-                    </td>
-                </tr>
+            <table id="targets-table">
+                <thead>
+                    <tr>
+                        <th>Alvo (%)</th>
+                        <th>Preço Futuro</th>
+                        <th>Diferença</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="targets-body">
+                    <!-- Os alvos serão adicionados aqui dinamicamente -->
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4">
+                            <button id="calculate-btn">Calcular Todos</button>
+                            <button id="clear-targets-btn">Limpar Todos</button>
+                        </td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
         
         <div class="stats-container">
             <div class="stat-box">
                 <h3>Cruzamentos (24h)</h3>
-                <div class="stat-value" id="crossings-24h">30</div>
+                <div class="stat-value" id="crossings-24h">0</div>
                 <div class="stat-label">Vezes que spot e futuro convergiram</div>
             </div>
             
             <div class="stat-box">
                 <h3>Cruzamentos (30min)</h3>
-                <div class="stat-value" id="crossings-30min">5</div>
+                <div class="stat-value" id="crossings-30min">0</div>
                 <div class="stat-label">Vezes que spot e futuro convergiram</div>
             </div>
             
             <div class="stat-box">
                 <h3>Volume SPOT (24h)</h3>
-                <div class="stat-value" id="spot-volume">8.74K</div>
+                <div class="stat-value" id="spot-volume">0</div>
                 <div class="stat-label">REQ</div>
             </div>
             
             <div class="stat-box">
                 <h3>Diferença Atual</h3>
-                <div class="stat-value" id="current-diff">1.11%</div>
+                <div class="stat-value" id="current-diff">0.00%</div>
                 <div class="stat-label">GATEIO vs MEXC Futuros</div>
             </div>
         </div>
     </div>
 
     <script>
+        // Configurações
+        const AUTO_REFRESH_INTERVAL = 10000; // 10 segundos
+        let refreshInterval;
+        let currentSymbol = 'REQ'; // Símbolo padrão
+        let currentData = null;
+
+        // Variável para armazenar os alvos personalizados
+        let customTargets = [1, 2]; // Começa com os alvos padrão
+        
+        // Função para calcular os alvos
+        function calculateTargets() {
+            const entrySpot = parseFloat(document.getElementById('entry-spot-price').value);
+            const entryFuture = parseFloat(document.getElementById('entry-future-price').value);
+            
+            if (isNaN(entrySpot) || isNaN(entryFuture)) return;
+            
+            // Limpa o corpo da tabela
+            const targetsBody = document.getElementById('targets-body');
+            targetsBody.innerHTML = '';
+            
+            // Adiciona cada alvo na tabela
+            customTargets.forEach(targetPercent => {
+                // CORREÇÃO: Calcula o preço futuro baseado na porcentagem (SHORT = preço MENOR)
+                const targetPrice = entryFuture * (1 - targetPercent/100);
+                
+                // Cria a linha da tabela
+                const row = document.createElement('tr');
+                
+                // Coluna do alvo
+                const targetCell = document.createElement('td');
+                targetCell.textContent = targetPercent + '%';
+                row.appendChild(targetCell);
+                
+                // Coluna do preço futuro
+                const priceCell = document.createElement('td');
+                priceCell.textContent = targetPrice.toFixed(8);
+                row.appendChild(priceCell);
+                
+                // Coluna da diferença (com classe para colorir)
+                const diffCell = document.createElement('td');
+                diffCell.textContent = '+' + targetPercent.toFixed(2) + '%';
+                diffCell.className = 'positive';
+                row.appendChild(diffCell);
+                
+                // Coluna de ação (botão remover)
+                const actionCell = document.createElement('td');
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'X';
+                removeBtn.className = 'remove-btn';
+                removeBtn.onclick = function() {
+                    customTargets = customTargets.filter(t => t !== targetPercent);
+                    calculateTargets();
+                };
+                actionCell.appendChild(removeBtn);
+                row.appendChild(actionCell);
+                
+                // Adiciona linha à tabela
+                targetsBody.appendChild(row);
+            });
+        }
+
         // Inicializa o gráfico do TradingView
-        new TradingView.widget({
-            "autosize": true,
-            "symbol": "BINANCE:BTCUSDT",
-            "interval": "15",
-            "timezone": "Etc/UTC",
-            "theme": "light",
-            "style": "1",
-            "locale": "br",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_top_toolbar": false,
-            "hide_side_toolbar": false,
-            "allow_symbol_change": true,
-            "container_id": "tradingview-chart",
-            "studies": [
-                "BB@tv-basicstudies"
-            ],
-            "overrides": {
-                "paneProperties.background": "#ffffff",
-                "paneProperties.vertGridProperties.color": "#eeeeee",
-                "paneProperties.horzGridProperties.color": "#eeeeee"
-            }
-        });
+        function initTradingViewChart(symbol) {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": `BINANCE:${symbol}USDT`,
+                "interval": "15",
+                "timezone": "Etc/UTC",
+                "theme": "light",
+                "style": "1",
+                "locale": "br",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_top_toolbar": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "tradingview-chart",
+                "studies": [
+                    "BB@tv-basicstudies"
+                ],
+                "overrides": {
+                    "paneProperties.background": "#ffffff",
+                    "paneProperties.vertGridProperties.color": "#eeeeee",
+                    "paneProperties.horzGridProperties.color": "#eeeeee"
+                }
+            });
+        }
 
         // Função para buscar dados da API
         async function fetchData() {
@@ -292,66 +413,182 @@
                 
                 if (data.error) {
                     console.error('Erro ao buscar dados:', data.error);
+                    showNotification('Erro ao buscar dados', 'error');
                     return;
                 }
                 
-                // Atualiza a interface com os dados recebidos
-                updateUI(data);
+                // Verifica se há dados para o símbolo atual
+                const symbolData = data.data.find(item => 
+                    item.simbolo.replace('USDT', '') === currentSymbol);
+                
+                if (symbolData) {
+                    currentData = symbolData;
+                    updateUI(symbolData);
+                } else {
+                    showNotification(`Dados não encontrados para ${currentSymbol}`, 'error');
+                }
+                
+                return data;
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
+                showNotification('Erro de conexão com a API', 'error');
             }
         }
         
+        // Função para adicionar um novo alvo
+        function addTarget() {
+            const targetInput = document.getElementById('target-profit');
+            const targetValue = parseFloat(targetInput.value);
+            
+            if (isNaN(targetValue) || targetValue <= 0) {
+                showNotification('Por favor, insira um valor válido para o alvo', 'error');
+                return;
+            }
+            
+            // Verifica se o alvo já existe
+            if (customTargets.includes(targetValue)) {
+                showNotification('Este alvo já existe', 'error');
+                return;
+            }
+            
+            // Adiciona o novo alvo e ordena a lista
+            customTargets.push(targetValue);
+            customTargets.sort((a, b) => a - b);
+            
+            // Recalcula e atualiza a tabela
+            calculateTargets();
+            
+            // Mostra notificação
+            showNotification(`Alvo de ${targetValue}% adicionado!`, 'success');
+        }
+
+        // Função para limpar todos os alvos
+        function clearTargets() {
+            customTargets = [];
+            calculateTargets();
+            showNotification('Todos os alvos foram removidos', 'success');
+        }
+        
+        // Adicionar event listeners quando o documento estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listeners existentes...
+            
+            // Adicionar novos event listeners para os botões da calculadora
+            document.getElementById('add-target-btn').addEventListener('click', addTarget);
+            document.getElementById('clear-targets-btn').addEventListener('click', clearTargets);
+            document.getElementById('calculate-btn').addEventListener('click', calculateTargets);
+            
+            // Permitir adicionar alvo ao pressionar Enter no campo de alvo
+            document.getElementById('target-profit').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addTarget();
+                }
+            });
+            
+            // Inicializar a tabela com os alvos padrão
+            calculateTargets();
+        });
+
         // Função para atualizar a interface com os dados
         function updateUI(data) {
-            if (data.data && data.data.length > 0) {
-                const firstPair = data.data[0];
-                
-                document.getElementById('spot-price').textContent = firstPair.preco_spot.toFixed(5);
-                document.getElementById('spot-exchange').textContent = firstPair.corretora_spot;
-                document.getElementById('future-price').textContent = firstPair.preco_futuros.toFixed(5);
-                document.getElementById('future-exchange').textContent = 'MEXC';
-                
-                const entryProfit = firstPair.diferenca;
-                const entryProfitElement = document.getElementById('entry-profit');
-                entryProfitElement.textContent = entryProfit.toFixed(2) + '%';
-                entryProfitElement.className = entryProfit >= 0 ? 'profit-loss positive' : 'profit-loss negative';
-                
-                document.getElementById('crossings-24h').textContent = data.total_crossings_24h;
-                document.getElementById('crossings-30min').textContent = data.total_crossings_30min;
-                document.getElementById('spot-volume').textContent = (firstPair.volume_spot / 1000).toFixed(2) + 'K';
-                document.getElementById('current-diff').textContent = firstPair.diferenca.toFixed(2) + '%';
-                
-                // Atualiza a calculadora
-                document.getElementById('entry-spot-price').value = firstPair.preco_spot.toFixed(5);
-                document.getElementById('entry-future-price').value = firstPair.preco_futuros.toFixed(5);
-                calculateTargets();
+            if (!data) return;
+            
+            // Atualiza preços
+            document.getElementById('spot-price').textContent = data.preco_spot.toFixed(8);
+            document.getElementById('spot-exchange').textContent = data.corretora_spot;
+            document.getElementById('future-price').textContent = data.preco_futuros.toFixed(8);
+            
+            // Calcula diferença de entrada
+            const entryDiff = ((data.preco_futuros - data.preco_spot) / data.preco_spot) * 100;
+            const entryProfitElement = document.getElementById('entry-profit');
+            entryProfitElement.textContent = entryDiff.toFixed(2) + '%';
+            entryProfitElement.className = entryDiff >= 0 ? 'profit-loss positive' : 'profit-loss negative';
+            
+            // Configura valores iniciais para venda/fechamento (pode ser ajustado)
+            document.getElementById('sell-spot-price').textContent = (data.preco_spot * 0.995).toFixed(8);
+            document.getElementById('close-future-price').textContent = (data.preco_futuros * 1.005).toFixed(8);
+            
+            // Calcula diferença de saída (exemplo)
+            const exitDiff = ((data.preco_spot * 0.995 - data.preco_futuros * 1.005) / data.preco_spot) * 100;
+            const exitProfitElement = document.getElementById('exit-profit');
+            exitProfitElement.textContent = exitDiff.toFixed(2) + '%';
+            exitProfitElement.className = exitDiff >= 0 ? 'profit-loss positive' : 'profit-loss negative';
+            
+            // Atualiza estatísticas
+            document.getElementById('crossings-24h').textContent = data.crossings_24h;
+            document.getElementById('crossings-30min').textContent = data.crossings_30min;
+            document.getElementById('spot-volume').textContent = formatVolume(data.volume_spot);
+            document.getElementById('current-diff').textContent = entryDiff.toFixed(2) + '%';
+            
+            // Atualiza a calculadora
+            document.getElementById('entry-spot-price').value = data.preco_spot.toFixed(8);
+            document.getElementById('entry-future-price').value = data.preco_futuros.toFixed(8);
+            calculateTargets();
+        }
+        
+        // Função para formatar volume
+        function formatVolume(volume) {
+            if (volume >= 1000000) {
+                return (volume / 1000000).toFixed(2) + 'M';
+            } else if (volume >= 1000) {
+                return (volume / 1000).toFixed(2) + 'K';
             }
+            return volume.toFixed(2);
         }
         
-        // Função para calcular os alvos
-        function calculateTargets() {
-            const entrySpot = parseFloat(document.getElementById('entry-spot-price').value);
-            const entryFuture = parseFloat(document.getElementById('entry-future-price').value);
+        // Função para mostrar notificação
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.backgroundColor = type === 'success' ? '#27ae60' : '#e74c3c';
+            notification.textContent = message;
+            document.body.appendChild(notification);
             
-            if (isNaN(entrySpot) || isNaN(entryFuture)) return;
-            
-            // Calcula os preços alvo para 1% e 2%
-            const target1 = entryFuture * 1.01;
-            const target2 = entryFuture * 1.02;
-            
-            document.getElementById('target-1').textContent = target1.toFixed(5);
-            document.getElementById('target-2').textContent = target2.toFixed(5);
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 5000);
         }
         
+        // Configura auto-refresh
+        function setupAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            refreshInterval = setInterval(fetchData, AUTO_REFRESH_INTERVAL);
+        }
+
         // Event listeners
         document.getElementById('calculate-btn').addEventListener('click', calculateTargets);
         document.getElementById('entry-spot-price').addEventListener('change', calculateTargets);
         document.getElementById('entry-future-price').addEventListener('change', calculateTargets);
         
-        // Busca dados inicialmente e a cada 10 segundos
-        fetchData();
-        setInterval(fetchData, 10000);
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('symbol')) {
+                currentSymbol = urlParams.get('symbol').toUpperCase();
+                document.title = `Calculadora - ${currentSymbol}`;
+            }
+            
+            if (urlParams.has('spot') && urlParams.has('future') && urlParams.has('exchange')) {
+                // Preenche os campos iniciais com os parâmetros da URL
+                document.getElementById('entry-spot-price').value = parseFloat(urlParams.get('spot')).toFixed(8);
+                document.getElementById('entry-future-price').value = parseFloat(urlParams.get('future')).toFixed(8);
+                document.getElementById('spot-exchange').textContent = urlParams.get('exchange');
+                
+                // Calcula os alvos iniciais
+                calculateTargets();
+            }
+            
+            // Inicializa o gráfico
+            initTradingViewChart(currentSymbol);
+            
+            // Busca dados e configura auto-refresh
+            fetchData().then(() => {
+                setupAutoRefresh();
+            });
+        });
     </script>
 </body>
 </html>

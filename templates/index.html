@@ -403,6 +403,21 @@
             from { opacity: 1; }
             to { opacity: 0; visibility: hidden; }
         }
+        .calculator-button {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+
+        .calculator-button:hover {
+            background-color: #e67e22;
+        }
     </style>
 </head>
 <body>
@@ -928,8 +943,13 @@
                             ${moeda.crossings_24h > 0 || moeda.crossings_30min > 0 ? 
                                 `<span class="crossing-badge" title="Cruzamentos recentes">${moeda.crossings_24h} | ${moeda.crossings_30min}</span>` : ''}
                         </div>
-                        <div class="price-difference ${classeDiferenca}">
-                            ${diferenca > 0 ? '+' : ''}${diferenca.toFixed(2)}%
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="price-difference ${classeDiferenca}">
+                                ${diferenca > 0 ? '+' : ''}${diferenca.toFixed(2)}%
+                            </div>
+                            <button class="calculator-button" data-symbol="${simboloLimpo}" data-spot="${moeda.preco_spot}" data-future="${moeda.preco_futuros}" data-exchange="${moeda.corretora_spot}">
+                                Calculadora
+                            </button>
                         </div>
                     </div>
                     
@@ -961,6 +981,17 @@
                         </div>
                     </div>
                 `;
+                card.querySelectorAll('.calculator-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const symbol = this.getAttribute('data-symbol');
+                        const spotPrice = this.getAttribute('data-spot');
+                        const futurePrice = this.getAttribute('data-future');
+                        const exchange = this.getAttribute('data-exchange');
+                        
+                        // Redireciona para a página da calculadora com os parâmetros
+                        window.location.href = `/calculadora?symbol=${encodeURIComponent(symbol)}&spot=${spotPrice}&future=${futurePrice}&exchange=${encodeURIComponent(exchange)}`;
+                    });
+                });
                 
                 container.appendChild(card);
             });
