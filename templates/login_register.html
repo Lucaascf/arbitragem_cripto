@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Autenticação</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .auth-container {
+            max-width: 480px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .auth-btn:hover {
+            opacity: 0.9;
+        }
+        .auth-nav {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .auth-link {
+            color: #3b82f6;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .alert {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 0.25rem;
+        }
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .alert-error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Sistema de Comparação de Preços</h1>
+            <p class="text-gray-600">Faça login ou registre-se para continuar</p>
+        </header>
+
+        <!-- Container para mensagens de alerta -->
+        <div id="alert-container" class="max-w-md mx-auto mb-4" style="display: none;"></div>
+
+        <!-- Formulário de Login -->
+        <div id="login-container" class="auth-container bg-white">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email" class="block text-gray-700 mb-2">E-mail:</label>
+                    <input type="email" id="login-email" name="email" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password" class="block text-gray-700 mb-2">Senha:</label>
+                    <input type="password" id="login-password" name="password" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <button type="submit" class="auth-btn bg-blue-500 text-white">Entrar</button>
+            </form>
+            <div class="auth-nav">
+                <p>Não tem uma conta? <span class="auth-link" onclick="showRegister()">Registre-se</span></p>
+            </div>
+        </div>
+
+        <!-- Formulário de Registro -->
+        <div id="register-container" class="auth-container bg-white" style="display: none;">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Registro</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-name" class="block text-gray-700 mb-2">Nome:</label>
+                    <input type="text" id="register-name" name="name" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email" class="block text-gray-700 mb-2">E-mail:</label>
+                    <input type="email" id="register-email" name="email" class="w-full p-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password" class="block text-gray-700 mb-2">Senha:</label>
+                    <input type="password" id="register-password" name="password" class="w-full p-2 border border-gray-300 rounded" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password" class="block text-gray-700 mb-2">Confirmar Senha:</label>
+                    <input type="password" id="register-confirm-password" name="confirm_password" class="w-full p-2 border border-gray-300 rounded" required minlength="6">
+                </div>
+                <button type="submit" class="auth-btn bg-green-500 text-white">Registrar</button>
+            </form>
+            <div class="auth-nav">
+                <p>Já tem uma conta? <span class="auth-link" onclick="showLogin()">Faça login</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funções para alternar entre login e registro
+        function showLogin() {
+            document.getElementById('register-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
+        }
+
+        function showRegister() {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('register-container').style.display = 'block';
+        }
+
+        // Função para mostrar alertas
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert ${type === 'success' ? 'alert-success' : 'alert-error'}">
+                    ${message}
+                </div>
+            `;
+            alertContainer.style.display = 'block';
+            
+            // Esconder o alerta após 5 segundos
+            setTimeout(() => {
+                alertContainer.style.display = 'none';
+            }, 5000);
+        }
+
+        // Funções para gerenciar cookies
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function removeCookie(name) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+        }
+
+        // Função de redirecionamento
+        function redirectToHomePage() {
+            window.location.href = '/';
+        }
+
+        // Manipuladores de eventos para os formulários
+        document.getElementById('login-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Definir apenas o cookie, sem localStorage
+                    document.cookie = `auth_token=${data.token}; path=/; max-age=${60*60*24}`;
+                    showAlert('Login realizado com sucesso!', 'success');
+                    
+                    // Aguardar um momento antes de redirecionar
+                    setTimeout(() => {
+                        redirectToHomePage();
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Erro ao fazer login. Verifique suas credenciais.');
+                }
+            } catch (error) {
+                showAlert('Erro ao conectar ao servidor. Tente novamente mais tarde.');
+                console.error('Erro:', error);
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('As senhas não correspondem.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Registro realizado com sucesso! Faça login para continuar.', 'success');
+                    showLogin();
+                    // Limpa o formulário
+                    document.getElementById('register-form').reset();
+                } else {
+                    showAlert(data.message || 'Erro ao registrar. Verifique os dados e tente novamente.');
+                }
+            } catch (error) {
+                showAlert('Erro ao conectar ao servidor. Tente novamente mais tarde.');
+                console.error('Erro:', error);
+            }
+        });
+
+        // Verificar se o usuário já está autenticado
+        document.addEventListener('DOMContentLoaded', function() {
+            // O backend já verifica o cookie e redireciona adequadamente
+            // Não precisamos fazer verificação adicional no frontend
+        });
+    </script>
+</body>
+</html>
