@@ -3,14 +3,15 @@ import threading
 import time
 from datetime import datetime
 from services.comparison_service import ComparisonService
+from config import UPDATE_INTERVAL  # Importa a variável de configuração
 
 class CacheService:
     def __init__(self):
         self.cache_data = None
         self.last_update = None
         self.cache_lock = threading.Lock()
-        self.update_interval = 10  # segundos
-        self.comparison = ComparisonService()  # Inicializa aqui
+        self.update_interval = UPDATE_INTERVAL  # Usa a variável de configuração
+        self.comparison = ComparisonService()
         
     def start_background_updates(self):
         """Inicia a thread de atualização periódica"""

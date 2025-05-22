@@ -140,5 +140,4 @@ MOEDAS_PERMITIDAS = {
 CROSSING_THRESHOLD = 0.05  # Percentual de diferença para considerar um cruzamento (0.1%)
 CROSSING_WINDOW_30MIN = 1800  # 30 minutos em segundos
 
-# PUMPUSDT
-# CADUSDT , RIFUSDT, TRUMPUSDT
+UPDATE_INTERVAL = 2

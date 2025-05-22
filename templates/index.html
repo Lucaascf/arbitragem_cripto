@@ -423,7 +423,7 @@
 <body>
     <div class="container">
         <h1>Comparador de Criptomoedas</h1>
-        <div class="auto-refresh">Dados atualizados automaticamente a cada <span id="refresh-interval">10</span> segundos</div>
+        <div class="auto-refresh">Dados atualizados automaticamente a cada <span id="refresh-interval">carregando...</span> segundos</div>
         <div class="last-updated">Última atualização: <span id="update-time"></span></div>
         
         <div class="stats">
@@ -492,6 +492,7 @@
     <script>
         let allCoinsData = [];
         let autoRefreshInterval;
+        let AUTO_REFRESH_INTERVAL = 10000; // Valor padrão, será atualizado pela API
 
         // Adicione esta variável para armazenar o estado dos filtros
         let filtrosAtivos = {
@@ -520,13 +521,32 @@
         };
         
         const CONSTANTS = {
-            AUTO_REFRESH_INTERVAL: 10000,
             FILTER_DEBOUNCE_DELAY: 300,
             VOLUME_THRESHOLD: {
                 HIGH: 1000000,
                 MEDIUM: 100000
             }
         };
+
+        // Função para carregar configurações do servidor
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                
+                AUTO_REFRESH_INTERVAL = config.update_interval_ms;
+                
+                // Atualiza o texto na UI
+                document.getElementById('refresh-interval').textContent = config.update_interval;
+                
+                return config;
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+                // Mantém os valores padrão
+                document.getElementById('refresh-interval').textContent = AUTO_REFRESH_INTERVAL / 1000;
+                return null;
+            }
+        }
 
         function debounce(func, delay) {
             let timer;
@@ -549,13 +569,13 @@
             }, 5000);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Carrega configurações primeiro
+            await loadConfig();
+            
             // Inicializa a atualização automática
             fetchData();
             setupAutoRefresh();
-            
-            // Atualiza o texto do intervalo de atualização na UI
-            document.getElementById('refresh-interval').textContent = CONSTANTS.AUTO_REFRESH_INTERVAL / 1000;
             
             // Inicializa todos os event listeners
             initEventListeners();
@@ -802,8 +822,8 @@
                 clearInterval(autoRefreshInterval);
             }
             
-            // Configura novo intervalo (30 segundos)
-            autoRefreshInterval = setInterval(fetchData, CONSTANTS.AUTO_REFRESH_INTERVAL);
+            // Configura novo intervalo usando a variável dinâmica
+            autoRefreshInterval = setInterval(fetchData, AUTO_REFRESH_INTERVAL);
         }
         
         function manualRefresh() {
@@ -862,41 +882,45 @@
                     }
                     
                     // Atualiza a data/hora
-            const now = new Date();
-            updateTimeElement.textContent = now.toLocaleString('pt-BR');
-            
-            // Guarda as moedas selecionadas anteriormente
-            const moedasSelecionadasAnterior = filtrosAvancados.moedasSelecionadas;
-            
-            // Armazena todos os dados para filtragem
-            allCoinsData = data.data || data; // Compatível com ambas estruturas
-            
-            // Adiciona novas moedas que não existiam antes
-            allCoinsData.forEach(moeda => {
-                if (moedasSelecionadasAnterior[moeda.simbolo] === undefined) {
-                    moedasSelecionadasAnterior[moeda.simbolo] = true;
-                }
-            });
-            
-            // Atualiza as moedas selecionadas
-            filtrosAvancados.moedasSelecionadas = moedasSelecionadasAnterior;
-            
-            // Calcula estatísticas com todos os dados
-            calcularEstatisticas(allCoinsData);
-            
-            // Aplica os filtros atuais nos novos dados em vez de mostrar todos
-            aplicarFiltrosEExibir();
-            
-            // ADICIONE AQUI: Verificar se há novas oportunidades significativas (>3%)
-            const oportunidadesSignificativas = allCoinsData.filter(moeda => Math.abs(moeda.diferenca) > 3);
-            if (oportunidadesSignificativas.length > 0) {
-                const melhor = oportunidadesSignificativas[0];
-                mostrarNotificacao(`Nova oportunidade: ${melhor.simbolo.replace(/USDT$/, '')} com ${melhor.diferenca.toFixed(2)}% de diferença!`);
-            }
-            
-            return data;
-        })
-                .catch(error => { /* código existente */ });
+                    const now = new Date();
+                    updateTimeElement.textContent = now.toLocaleString('pt-BR');
+                    
+                    // Guarda as moedas selecionadas anteriormente
+                    const moedasSelecionadasAnterior = filtrosAvancados.moedasSelecionadas;
+                    
+                    // Armazena todos os dados para filtragem
+                    allCoinsData = data.data || data; // Compatível com ambas estruturas
+                    
+                    // Adiciona novas moedas que não existiam antes
+                    allCoinsData.forEach(moeda => {
+                        if (moedasSelecionadasAnterior[moeda.simbolo] === undefined) {
+                            moedasSelecionadasAnterior[moeda.simbolo] = true;
+                        }
+                    });
+                    
+                    // Atualiza as moedas selecionadas
+                    filtrosAvancados.moedasSelecionadas = moedasSelecionadasAnterior;
+                    
+                    // Calcula estatísticas com todos os dados
+                    calcularEstatisticas(allCoinsData);
+                    
+                    // Aplica os filtros atuais nos novos dados em vez de mostrar todos
+                    aplicarFiltrosEExibir();
+                    
+                    // ADICIONE AQUI: Verificar se há novas oportunidades significativas (>3%)
+                    const oportunidadesSignificativas = allCoinsData.filter(moeda => Math.abs(moeda.diferenca) > 3);
+                    if (oportunidadesSignificativas.length > 0) {
+                        const melhor = oportunidadesSignificativas[0];
+                        mostrarNotificacao(`Nova oportunidade: ${melhor.simbolo.replace(/USDT$/, '')} com ${melhor.diferenca.toFixed(2)}% de diferença!`);
+                    }
+                    
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar dados:', error);
+                    updateTimeElement.textContent = originalText || 'Erro ao atualizar';
+                    mostrarNotificacao('Erro ao buscar dados', 'error');
+                });
         }
         
         function formatarVolume(volume) {

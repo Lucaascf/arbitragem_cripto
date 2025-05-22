@@ -5,7 +5,7 @@ import threading
 from auth import auth_bp, init_db
 from auth import token_required
 import jwt
-
+from config import UPDATE_INTERVAL  # Importa a variável de configuração
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_super_segura_aqui'
@@ -26,6 +26,14 @@ def index(current_user):
 @token_required
 def calculadora(current_user):
     return render_template('calculadora.html')
+
+@app.route('/api/config')
+def api_config():
+    """Endpoint para retornar configurações do sistema"""
+    return jsonify({
+        'update_interval': UPDATE_INTERVAL,
+        'update_interval_ms': UPDATE_INTERVAL * 1000  # Para JavaScript
+    })
 
 @app.route('/login')
 def login_page():

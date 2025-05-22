@@ -318,13 +318,27 @@
 
     <script>
         // Configurações
-        const AUTO_REFRESH_INTERVAL = 10000; // 10 segundos
+        let AUTO_REFRESH_INTERVAL = 10000; // Valor padrão, será atualizado pela API
         let refreshInterval;
         let currentSymbol = 'REQ'; // Símbolo padrão
         let currentData = null;
 
         // Variável para armazenar os alvos personalizados
         let customTargets = [1, 2]; // Começa com os alvos padrão
+
+        // Função para carregar configurações do servidor
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                
+                AUTO_REFRESH_INTERVAL = config.update_interval_ms;
+                return config;
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+                return null;
+            }
+        }
         
         // Função para calcular os alvos
         function calculateTargets() {
@@ -470,7 +484,10 @@
         }
         
         // Adicionar event listeners quando o documento estiver carregado
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Carrega configurações primeiro
+            await loadConfig();
+            
             // Event listeners existentes...
             
             // Adicionar novos event listeners para os botões da calculadora
@@ -487,6 +504,32 @@
             
             // Inicializar a tabela com os alvos padrão
             calculateTargets();
+            
+            // Configurações de inicialização
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('symbol')) {
+                currentSymbol = urlParams.get('symbol').toUpperCase();
+                document.title = `Calculadora - ${currentSymbol}`;
+            }
+            
+            if (urlParams.has('spot') && urlParams.has('future') && urlParams.has('exchange')) {
+                // Preenche os campos iniciais com os parâmetros da URL
+                document.getElementById('entry-spot-price').value = parseFloat(urlParams.get('spot')).toFixed(8);
+                document.getElementById('entry-future-price').value = parseFloat(urlParams.get('future')).toFixed(8);
+                document.getElementById('spot-exchange').textContent = urlParams.get('exchange');
+                
+                // Calcula os alvos iniciais
+                calculateTargets();
+            }
+            
+            // Inicializa o gráfico
+            initTradingViewChart(currentSymbol);
+            
+            // Busca dados e configura auto-refresh
+            fetchData().then(() => {
+                setupAutoRefresh();
+            });
         });
 
         // Função para atualizar a interface com os dados
@@ -561,34 +604,6 @@
         document.getElementById('calculate-btn').addEventListener('click', calculateTargets);
         document.getElementById('entry-spot-price').addEventListener('change', calculateTargets);
         document.getElementById('entry-future-price').addEventListener('change', calculateTargets);
-        
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            if (urlParams.has('symbol')) {
-                currentSymbol = urlParams.get('symbol').toUpperCase();
-                document.title = `Calculadora - ${currentSymbol}`;
-            }
-            
-            if (urlParams.has('spot') && urlParams.has('future') && urlParams.has('exchange')) {
-                // Preenche os campos iniciais com os parâmetros da URL
-                document.getElementById('entry-spot-price').value = parseFloat(urlParams.get('spot')).toFixed(8);
-                document.getElementById('entry-future-price').value = parseFloat(urlParams.get('future')).toFixed(8);
-                document.getElementById('spot-exchange').textContent = urlParams.get('exchange');
-                
-                // Calcula os alvos iniciais
-                calculateTargets();
-            }
-            
-            // Inicializa o gráfico
-            initTradingViewChart(currentSymbol);
-            
-            // Busca dados e configura auto-refresh
-            fetchData().then(() => {
-                setupAutoRefresh();
-            });
-        });
     </script>
 </body>
 </html>
