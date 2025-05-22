@@ -1008,15 +1008,15 @@
                 card.querySelectorAll('.calculator-button').forEach(button => {
                     button.addEventListener('click', function() {
                         const symbol = this.getAttribute('data-symbol');
-                        const spotPrice = this.getAttribute('data-spot');
-                        const futurePrice = this.getAttribute('data-future');
+                        const spotPrice = parseFloat(this.getAttribute('data-spot'));
+                        const futurePrice = parseFloat(this.getAttribute('data-future'));
                         const exchange = this.getAttribute('data-exchange');
                         
-                        // Redireciona para a página da calculadora com os parâmetros
-                        window.location.href = `/calculadora?symbol=${encodeURIComponent(symbol)}&spot=${spotPrice}&future=${futurePrice}&exchange=${encodeURIComponent(exchange)}`;
+                        // Não inverter os valores, passar exatamente como estão
+                        window.location.href = `/calculadora?symbol=${encodeURIComponent(symbol)}&spotPrice=${spotPrice}&futurePrice=${futurePrice}&buyExchange=${encodeURIComponent(exchange)}&shortExchange=MEXC`;
                     });
                 });
-                
+                                
                 container.appendChild(card);
             });
         }
