@@ -9,33 +9,50 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #FFD700;
+            min-height: 100vh;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 1px solid #FFD700;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1);
             padding: 20px;
         }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid #FFD700;
+        }
+        .logo {
+            width: 150px;
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+        }
         h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-top: 0;
+            color: #FFD700;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        h3 {
+            color: #FFD700;
         }
         .strategy-explanation {
-            background-color: #e8f4fd;
-            border-left: 4px solid #3498db;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-left: 4px solid #FFD700;
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 4px;
         }
         .strategy-explanation h3 {
             margin-top: 0;
-            color: #2c3e50;
+            color: #FFD700;
         }
         .step {
             margin: 8px 0;
@@ -45,8 +62,8 @@
             display: inline-block;
             width: 25px;
             height: 25px;
-            background-color: #3498db;
-            color: white;
+            background-color: #FFD700;
+            color: #1a1a1a;
             border-radius: 50%;
             text-align: center;
             line-height: 25px;
@@ -60,7 +77,8 @@
             margin-bottom: 20px;
         }
         .action-card {
-            background-color: #f9f9f9;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             padding: 20px;
             border-radius: 8px;
             border: 2px solid transparent;
@@ -75,14 +93,14 @@
             background-color: rgba(231, 76, 60, 0.1);
         }
         .profit-card {
-            border-color: #f39c12;
+            border-color: #FFD700;
             background-color: rgba(243, 156, 18, 0.1);
         }
         .card-title {
             font-size: 1.2em;
             font-weight: bold;
             margin-bottom: 15px;
-            color: #2c3e50;
+            color: #FFD700;
         }
         .price-display {
             font-size: 1.8em;
@@ -96,15 +114,16 @@
             color: #e74c3c;
         }
         .profit-display {
-            color: #f39c12;
+            color: #FFD700;
         }
         .exchange-name {
-            color: #7f8c8d;
+            color: #B8860B;
             font-style: italic;
             margin-bottom: 10px;
         }
         .calculator-section {
-            background-color: #f8f9fa;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
@@ -116,24 +135,29 @@
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #FFD700;
         }
         input {
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #FFD700;
+            background: #2d2d2d;
+            color: #FFD700;
             border-radius: 4px;
             width: 100%;
             box-sizing: border-box;
             font-size: 14px;
         }
-        .readonly-input {
-            background-color: #e9ecef;
-            color: #495057;
+        input::placeholder {
+            color: #B8860B;
+        }
+        input:disabled {
+            background-color: rgba(255, 215, 0, 0.1);
+            color: #B8860B;
             cursor: not-allowed;
         }
         button {
-            background-color: #3498db;
-            color: white;
+            background-color: #FFD700;
+            color: #1a1a1a;
             border: none;
             padding: 12px 20px;
             border-radius: 4px;
@@ -143,10 +167,11 @@
             margin: 5px;
         }
         button:hover {
-            background-color: #2980b9;
+            background-color: #FFA500;
         }
         .start-btn {
             background-color: #27ae60;
+            color: white;
             font-size: 1.1em;
             padding: 15px 25px;
         }
@@ -155,6 +180,7 @@
         }
         .stop-btn {
             background-color: #e74c3c;
+            color: white;
             font-size: 1.1em;
             padding: 15px 25px;
         }
@@ -162,20 +188,20 @@
             background-color: #c0392b;
         }
         .current-opportunity {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             border-radius: 8px;
             padding: 15px;
             margin: 20px 0;
         }
         .opportunity-title {
             font-weight: bold;
-            color: #856404;
+            color: #FFD700;
             margin-bottom: 10px;
         }
         .alert-section {
-            background-color: #d4edda;
-            border: 2px solid #28a745;
+            background-color: rgba(46, 204, 113, 0.1);
+            border: 2px solid #27ae60;
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
@@ -185,8 +211,8 @@
             display: block;
         }
         .alert-section.exit-alert {
-            background-color: #f8d7da;
-            border-color: #dc3545;
+            background-color: rgba(231, 76, 60, 0.1);
+            border-color: #e74c3c;
             animation: pulse 2s infinite;
         }
         @keyframes pulse {
@@ -198,17 +224,18 @@
             font-size: 1.3em;
             font-weight: bold;
             margin-bottom: 10px;
+            color: #FFD700;
         }
         .operation-status {
-            background-color: #f8f9fa;
-            border: 2px solid #6c757d;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #B8860B;
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
         }
         .operation-status.active {
-            background-color: #d1ecf1;
-            border-color: #17a2b8;
+            background: rgba(52, 152, 219, 0.1);
+            border-color: #3498db;
         }
         .status-grid {
             display: grid;
@@ -217,19 +244,20 @@
             margin: 15px 0;
         }
         .status-item {
-            background-color: white;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             padding: 10px;
             border-radius: 4px;
             text-align: center;
         }
         .status-label {
             font-size: 0.9em;
-            color: #6c757d;
+            color: #B8860B;
         }
         .status-value {
             font-size: 1.2em;
             font-weight: bold;
-            color: #2c3e50;
+            color: #FFD700;
         }
         .stats-grid {
             display: grid;
@@ -238,7 +266,8 @@
             margin: 20px 0;
         }
         .stat-card {
-            background-color: #f8f9fa;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             padding: 15px;
             border-radius: 8px;
             text-align: center;
@@ -246,22 +275,22 @@
         .stat-value {
             font-size: 1.5em;
             font-weight: bold;
-            color: #2c3e50;
+            color: #FFD700;
         }
         .stat-label {
-            color: #7f8c8d;
+            color: #B8860B;
             font-size: 0.9em;
         }
         .pnl-section {
-            background-color: #f8f9fa;
-            border: 2px solid #3498db;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
             text-align: center;
         }
         .pnl-section h3 {
-            color: #2c3e50;
+            color: #FFD700;
             margin-top: 0;
             margin-bottom: 20px;
         }
@@ -274,6 +303,7 @@
             font-size: 1.2em;
             margin-bottom: 10px;
             font-weight: bold;
+            color: #FFD700;
         }
         .profit-positive {
             color: #27ae60;
@@ -306,7 +336,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>Sistema de Monitoramento - Arbitragem</h1>
+        <div class="header">
+            <svg class="logo" viewBox="0 0 150 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <text x="5" y="35" font-size="28" font-weight="bold" fill="#FFD700">MT</text>
+                <text x="5" y="55" font-size="16" fill="#FFD700">CRYPTO</text>
+            </svg>
+            <h1>Sistema de Monitoramento - Arbitragem</h1>
+        </div>
         
         <div class="strategy-explanation">
             <h3>🎯 Como Usar o Sistema de Monitoramento</h3>
@@ -334,7 +370,7 @@
         </div>
 
         <div class="alert-section" id="exit-alert">
-            <div class="alert-title" style="color: #721c24;">🚨 HORA DE SAIR! 🚨</div>
+            <div class="alert-title" style="color: #e74c3c;">🚨 HORA DE SAIR! 🚨</div>
             <div id="exit-message">Os preços cruzaram! É hora de fechar as posições.</div>
         </div>
 
@@ -733,7 +769,7 @@
             } else {
                 resultCard.className = 'action-card';
                 resultValue.className = 'price-display';
-                resultValue.style.color = '#7f8c8d';
+                resultValue.style.color = '#B8860B';
                 resultValue.textContent = currentSpread.toFixed(2) + '%';
             }
             
@@ -821,7 +857,6 @@
                 pnlPercentElement.className = 'pnl-display profit-negative';
             }
         }
-
 
         function formatVolume(volume) {
             if (volume >= 1000000) return (volume / 1000000).toFixed(2) + 'M';
