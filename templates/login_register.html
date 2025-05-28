@@ -3,107 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Autenticação</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <title>MT Crypto - Sistema de Autenticação</title>
     <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #FFD700;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid #FFD700;
+        }
+        
+        .logo {
+            width: 200px;
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+        }
+        
+        h1 {
+            color: #FFD700;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #B8860B;
+            margin-bottom: 30px;
+        }
+        
         .auth-container {
-            max-width: 480px;
-            margin: 2rem auto;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 1px solid #FFD700;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
         }
+        
+        .auth-title {
+            text-align: center;
+            color: #FFD700;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 20px;
         }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #FFD700;
+            background: #2d2d2d;
+            color: #FFD700;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input::placeholder {
+            color: #B8860B;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #FFA500;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+        }
+        
         .auth-btn {
             width: 100%;
-            padding: 0.75rem;
-            border-radius: 0.25rem;
-            font-weight: 600;
+            padding: 12px;
+            background-color: #FFD700;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-top: 10px;
         }
+        
         .auth-btn:hover {
-            opacity: 0.9;
+            background-color: #FFA500;
         }
+        
         .auth-nav {
             text-align: center;
-            margin-top: 1rem;
+            margin-top: 20px;
+            color: #B8860B;
         }
+        
         .auth-link {
-            color: #3b82f6;
+            color: #FFD700;
             cursor: pointer;
             text-decoration: underline;
+            font-weight: bold;
         }
+        
+        .auth-link:hover {
+            color: #FFA500;
+        }
+        
         .alert {
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border-radius: 0.25rem;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border-left: 4px solid;
+            font-weight: bold;
         }
+        
         .alert-success {
-            background-color: #d1fae5;
-            color: #065f46;
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+            border-left-color: #27ae60;
         }
+        
         .alert-error {
-            background-color: #fee2e2;
-            color: #b91c1c;
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border-left-color: #e74c3c;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,215,0,0.3);
+            border-radius: 50%;
+            border-top-color: #FFD700;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                max-width: none;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .auth-container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Sistema de Comparação de Preços</h1>
-            <p class="text-gray-600">Faça login ou registre-se para continuar</p>
-        </header>
+<body>
+    <div class="container">
+        <div class="header">
+            <svg class="logo" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <text x="10" y="45" font-size="36" font-weight="bold" fill="#FFD700">MT</text>
+                <text x="10" y="70" font-size="20" fill="#FFD700">CRYPTO</text>
+            </svg>
+            <h1>Sistema de Autenticação</h1>
+            <p class="subtitle">Acesse sua conta para continuar</p>
+        </div>
 
         <!-- Container para mensagens de alerta -->
-        <div id="alert-container" class="max-w-md mx-auto mb-4" style="display: none;"></div>
+        <div id="alert-container" style="display: none;"></div>
 
         <!-- Formulário de Login -->
-        <div id="login-container" class="auth-container bg-white">
-            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
+        <div id="login-container" class="auth-container">
+            <h2 class="auth-title">🔐 Login</h2>
             <form id="login-form">
                 <div class="form-group">
-                    <label for="login-email" class="block text-gray-700 mb-2">E-mail:</label>
-                    <input type="email" id="login-email" name="email" class="w-full p-2 border border-gray-300 rounded" required>
+                    <label for="login-email">📧 E-mail:</label>
+                    <input type="email" id="login-email" name="email" placeholder="Digite seu e-mail" required>
                 </div>
                 <div class="form-group">
-                    <label for="login-password" class="block text-gray-700 mb-2">Senha:</label>
-                    <input type="password" id="login-password" name="password" class="w-full p-2 border border-gray-300 rounded" required>
+                    <label for="login-password">🔒 Senha:</label>
+                    <input type="password" id="login-password" name="password" placeholder="Digite sua senha" required>
                 </div>
-                <button type="submit" class="auth-btn bg-blue-500 text-white">Entrar</button>
+                <button type="submit" class="auth-btn" id="login-btn">Entrar</button>
             </form>
             <div class="auth-nav">
-                <p>Não tem uma conta? <span class="auth-link" onclick="showRegister()">Registre-se</span></p>
+                <p>Não tem uma conta? <span class="auth-link" onclick="showRegister()">Registre-se aqui</span></p>
             </div>
         </div>
 
         <!-- Formulário de Registro -->
-        <div id="register-container" class="auth-container bg-white" style="display: none;">
-            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Registro</h2>
+        <div id="register-container" class="auth-container" style="display: none;">
+            <h2 class="auth-title">📝 Registro</h2>
             <form id="register-form">
                 <div class="form-group">
-                    <label for="register-name" class="block text-gray-700 mb-2">Nome:</label>
-                    <input type="text" id="register-name" name="name" class="w-full p-2 border border-gray-300 rounded" required>
+                    <label for="register-name">👤 Nome:</label>
+                    <input type="text" id="register-name" name="name" placeholder="Digite seu nome completo" required>
                 </div>
                 <div class="form-group">
-                    <label for="register-email" class="block text-gray-700 mb-2">E-mail:</label>
-                    <input type="email" id="register-email" name="email" class="w-full p-2 border border-gray-300 rounded" required>
+                    <label for="register-email">📧 E-mail:</label>
+                    <input type="email" id="register-email" name="email" placeholder="Digite seu e-mail" required>
                 </div>
                 <div class="form-group">
-                    <label for="register-password" class="block text-gray-700 mb-2">Senha:</label>
-                    <input type="password" id="register-password" name="password" class="w-full p-2 border border-gray-300 rounded" required minlength="6">
+                    <label for="register-password">🔒 Senha:</label>
+                    <input type="password" id="register-password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6">
                 </div>
                 <div class="form-group">
-                    <label for="register-confirm-password" class="block text-gray-700 mb-2">Confirmar Senha:</label>
-                    <input type="password" id="register-confirm-password" name="confirm_password" class="w-full p-2 border border-gray-300 rounded" required minlength="6">
+                    <label for="register-confirm-password">🔐 Confirmar Senha:</label>
+                    <input type="password" id="register-confirm-password" name="confirm_password" placeholder="Confirme sua senha" required minlength="6">
                 </div>
-                <button type="submit" class="auth-btn bg-green-500 text-white">Registrar</button>
+                <button type="submit" class="auth-btn" id="register-btn">Registrar</button>
             </form>
             <div class="auth-nav">
-                <p>Já tem uma conta? <span class="auth-link" onclick="showLogin()">Faça login</span></p>
+                <p>Já tem uma conta? <span class="auth-link" onclick="showLogin()">Faça login aqui</span></p>
             </div>
         </div>
     </div>
@@ -113,11 +253,13 @@
         function showLogin() {
             document.getElementById('register-container').style.display = 'none';
             document.getElementById('login-container').style.display = 'block';
+            document.getElementById('alert-container').style.display = 'none';
         }
 
         function showRegister() {
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('register-container').style.display = 'block';
+            document.getElementById('alert-container').style.display = 'none';
         }
 
         // Função para mostrar alertas
@@ -136,16 +278,19 @@
             }, 5000);
         }
 
-        // Funções para gerenciar cookies
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-            return null;
-        }
-
-        function removeCookie(name) {
-            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+        // Função para mostrar/esconder loading nos botões
+        function setButtonLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.innerHTML = '<span class="loading-spinner"></span>Processando...';
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            } else {
+                const originalText = buttonId === 'login-btn' ? 'Entrar' : 'Registrar';
+                button.innerHTML = originalText;
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+            }
         }
 
         // Função de redirecionamento
@@ -157,8 +302,15 @@
         document.getElementById('login-form').addEventListener('submit', async function(event) {
             event.preventDefault();
             
-            const email = document.getElementById('login-email').value;
+            const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
+            
+            if (!email || !password) {
+                showAlert('Por favor, preencha todos os campos.');
+                return;
+            }
+            
+            setButtonLoading('login-btn', true);
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -174,33 +326,47 @@
                 if (response.ok) {
                     // Definir apenas o cookie, sem localStorage
                     document.cookie = `auth_token=${data.token}; path=/; max-age=${60*60*24}`;
-                    showAlert('Login realizado com sucesso!', 'success');
+                    showAlert('✅ Login realizado com sucesso! Redirecionando...', 'success');
                     
                     // Aguardar um momento antes de redirecionar
                     setTimeout(() => {
                         redirectToHomePage();
-                    }, 1000);
+                    }, 1500);
                 } else {
-                    showAlert(data.message || 'Erro ao fazer login. Verifique suas credenciais.');
+                    showAlert('❌ ' + (data.message || 'Erro ao fazer login. Verifique suas credenciais.'));
                 }
             } catch (error) {
-                showAlert('Erro ao conectar ao servidor. Tente novamente mais tarde.');
+                showAlert('❌ Erro ao conectar ao servidor. Tente novamente mais tarde.');
                 console.error('Erro:', error);
+            } finally {
+                setButtonLoading('login-btn', false);
             }
         });
 
         document.getElementById('register-form').addEventListener('submit', async function(event) {
             event.preventDefault();
             
-            const name = document.getElementById('register-name').value;
-            const email = document.getElementById('register-email').value;
+            const name = document.getElementById('register-name').value.trim();
+            const email = document.getElementById('register-email').value.trim();
             const password = document.getElementById('register-password').value;
             const confirmPassword = document.getElementById('register-confirm-password').value;
             
-            if (password !== confirmPassword) {
-                showAlert('As senhas não correspondem.');
+            if (!name || !email || !password || !confirmPassword) {
+                showAlert('❌ Por favor, preencha todos os campos.');
                 return;
             }
+            
+            if (password !== confirmPassword) {
+                showAlert('❌ As senhas não correspondem.');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showAlert('❌ A senha deve ter pelo menos 6 caracteres.');
+                return;
+            }
+            
+            setButtonLoading('register-btn', true);
             
             try {
                 const response = await fetch('/api/auth/register', {
@@ -214,16 +380,18 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showAlert('Registro realizado com sucesso! Faça login para continuar.', 'success');
+                    showAlert('✅ Registro realizado com sucesso! Agora você pode fazer login.', 'success');
                     showLogin();
                     // Limpa o formulário
                     document.getElementById('register-form').reset();
                 } else {
-                    showAlert(data.message || 'Erro ao registrar. Verifique os dados e tente novamente.');
+                    showAlert('❌ ' + (data.message || 'Erro ao registrar. Verifique os dados e tente novamente.'));
                 }
             } catch (error) {
-                showAlert('Erro ao conectar ao servidor. Tente novamente mais tarde.');
+                showAlert('❌ Erro ao conectar ao servidor. Tente novamente mais tarde.');
                 console.error('Erro:', error);
+            } finally {
+                setButtonLoading('register-btn', false);
             }
         });
 
@@ -231,6 +399,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             // O backend já verifica o cookie e redireciona adequadamente
             // Não precisamos fazer verificação adicional no frontend
+            
+            // Adicionar alguns efeitos visuais
+            const containers = document.querySelectorAll('.auth-container');
+            containers.forEach((container, index) => {
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    container.style.transition = 'all 0.5s ease';
+                    container.style.opacity = '1';
+                    container.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
         });
     </script>
 </body>
