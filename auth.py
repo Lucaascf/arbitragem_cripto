@@ -279,3 +279,4 @@ def verify_token(current_user):
 @auth_bp.route('/api/auth/logout', methods=['POST'])
 def logout():
     return jsonify({'message': 'Logout realizado com sucesso'}), 200
+  
