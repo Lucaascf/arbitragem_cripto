@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MT Crypto - Sistema de Autenticação</title>
+    <title>MT Crypto - Login</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -113,23 +113,6 @@
             background-color: #FFA500;
         }
         
-        .auth-nav {
-            text-align: center;
-            margin-top: 20px;
-            color: #B8860B;
-        }
-        
-        .auth-link {
-            color: #FFD700;
-            cursor: pointer;
-            text-decoration: underline;
-            font-weight: bold;
-        }
-        
-        .auth-link:hover {
-            color: #FFA500;
-        }
-        
         .alert {
             padding: 15px;
             margin-bottom: 20px;
@@ -194,7 +177,7 @@
                 <text x="10" y="45" font-size="36" font-weight="bold" fill="#FFD700">MT</text>
                 <text x="10" y="70" font-size="20" fill="#FFD700">CRYPTO</text>
             </svg>
-            <h1>Sistema de Autenticação</h1>
+            <h1>Sistema de Login</h1>
             <p class="subtitle">Acesse sua conta para continuar</p>
         </div>
 
@@ -206,62 +189,19 @@
             <h2 class="auth-title">🔐 Login</h2>
             <form id="login-form">
                 <div class="form-group">
-                    <label for="login-email">📧 E-mail:</label>
-                    <input type="email" id="login-email" name="email" placeholder="Digite seu e-mail" required>
+                    <label for="login-username">👤 Username:</label>
+                    <input type="text" id="login-username" name="username" placeholder="Digite seu username" required>
                 </div>
                 <div class="form-group">
-                    <label for="login-password">🔒 Senha:</label>
-                    <input type="password" id="login-password" name="password" placeholder="Digite sua senha" required>
+                    <label for="login-password">🔒 Senha (6 dígitos):</label>
+                    <input type="password" id="login-password" name="password" placeholder="Digite sua senha de 6 dígitos" required maxlength="6" pattern="[0-9]{6}">
                 </div>
                 <button type="submit" class="auth-btn" id="login-btn">Entrar</button>
             </form>
-            <div class="auth-nav">
-                <p>Não tem uma conta? <span class="auth-link" onclick="showRegister()">Registre-se aqui</span></p>
-            </div>
-        </div>
-
-        <!-- Formulário de Registro -->
-        <div id="register-container" class="auth-container" style="display: none;">
-            <h2 class="auth-title">📝 Registro</h2>
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="register-name">👤 Nome:</label>
-                    <input type="text" id="register-name" name="name" placeholder="Digite seu nome completo" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-email">📧 E-mail:</label>
-                    <input type="email" id="register-email" name="email" placeholder="Digite seu e-mail" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-password">🔒 Senha:</label>
-                    <input type="password" id="register-password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6">
-                </div>
-                <div class="form-group">
-                    <label for="register-confirm-password">🔐 Confirmar Senha:</label>
-                    <input type="password" id="register-confirm-password" name="confirm_password" placeholder="Confirme sua senha" required minlength="6">
-                </div>
-                <button type="submit" class="auth-btn" id="register-btn">Registrar</button>
-            </form>
-            <div class="auth-nav">
-                <p>Já tem uma conta? <span class="auth-link" onclick="showLogin()">Faça login aqui</span></p>
-            </div>
         </div>
     </div>
 
     <script>
-        // Funções para alternar entre login e registro
-        function showLogin() {
-            document.getElementById('register-container').style.display = 'none';
-            document.getElementById('login-container').style.display = 'block';
-            document.getElementById('alert-container').style.display = 'none';
-        }
-
-        function showRegister() {
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('register-container').style.display = 'block';
-            document.getElementById('alert-container').style.display = 'none';
-        }
-
         // Função para mostrar alertas
         function showAlert(message, type = 'error') {
             const alertContainer = document.getElementById('alert-container');
@@ -286,8 +226,7 @@
                 button.classList.add('btn-loading');
                 button.disabled = true;
             } else {
-                const originalText = buttonId === 'login-btn' ? 'Entrar' : 'Registrar';
-                button.innerHTML = originalText;
+                button.innerHTML = 'Entrar';
                 button.classList.remove('btn-loading');
                 button.disabled = false;
             }
@@ -298,15 +237,20 @@
             window.location.href = '/';
         }
 
-        // Manipuladores de eventos para os formulários
+        // Manipulador de eventos para o formulário de login
         document.getElementById('login-form').addEventListener('submit', async function(event) {
             event.preventDefault();
             
-            const email = document.getElementById('login-email').value.trim();
+            const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value;
             
-            if (!email || !password) {
+            if (!username || !password) {
                 showAlert('Por favor, preencha todos os campos.');
+                return;
+            }
+            
+            if (password.length !== 6 || !/^\d+$/.test(password)) {
+                showAlert('A senha deve ter exatamente 6 dígitos.');
                 return;
             }
             
@@ -318,7 +262,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ username, password })
                 });
                 
                 const data = await response.json();
@@ -343,74 +287,23 @@
             }
         });
 
-        document.getElementById('register-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('register-name').value.trim();
-            const email = document.getElementById('register-email').value.trim();
-            const password = document.getElementById('register-password').value;
-            const confirmPassword = document.getElementById('register-confirm-password').value;
-            
-            if (!name || !email || !password || !confirmPassword) {
-                showAlert('❌ Por favor, preencha todos os campos.');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                showAlert('❌ As senhas não correspondem.');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showAlert('❌ A senha deve ter pelo menos 6 caracteres.');
-                return;
-            }
-            
-            setButtonLoading('register-btn', true);
-            
-            try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name, email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showAlert('✅ Registro realizado com sucesso! Agora você pode fazer login.', 'success');
-                    showLogin();
-                    // Limpa o formulário
-                    document.getElementById('register-form').reset();
-                } else {
-                    showAlert('❌ ' + (data.message || 'Erro ao registrar. Verifique os dados e tente novamente.'));
-                }
-            } catch (error) {
-                showAlert('❌ Erro ao conectar ao servidor. Tente novamente mais tarde.');
-                console.error('Erro:', error);
-            } finally {
-                setButtonLoading('register-btn', false);
-            }
+        // Validação em tempo real da senha
+        document.getElementById('login-password').addEventListener('input', function(e) {
+            const value = e.target.value;
+            // Remove caracteres não numéricos
+            e.target.value = value.replace(/\D/g, '');
         });
 
-        // Verificar se o usuário já está autenticado
+        // Adicionar alguns efeitos visuais
         document.addEventListener('DOMContentLoaded', function() {
-            // O backend já verifica o cookie e redireciona adequadamente
-            // Não precisamos fazer verificação adicional no frontend
-            
-            // Adicionar alguns efeitos visuais
-            const containers = document.querySelectorAll('.auth-container');
-            containers.forEach((container, index) => {
-                container.style.opacity = '0';
-                container.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    container.style.transition = 'all 0.5s ease';
-                    container.style.opacity = '1';
-                    container.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
+            const container = document.querySelector('.auth-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                container.style.transition = 'all 0.5s ease';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
         });
     </script>
 </body>

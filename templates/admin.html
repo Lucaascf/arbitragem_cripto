@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MT Crypto - Painel de Administração</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #FFD700;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid #FFD700;
+        }
+        
+        h1 {
+            color: #FFD700;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .admin-card {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 1px solid #FFD700;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .auth-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        input, select {
+            padding: 8px 12px;
+            border: 1px solid #FFD700;
+            background: #2d2d2d;
+            color: #FFD700;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input::placeholder {
+            color: #B8860B;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin: 2px;
+        }
+        
+        .btn-primary {
+            background-color: #FFD700;
+            color: #1a1a1a;
+        }
+        
+        .btn-primary:hover {
+            background-color: #FFA500;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .users-table th,
+        .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #FFD700;
+        }
+        
+        .users-table th {
+            background-color: rgba(255, 215, 0, 0.1);
+            font-weight: bold;
+        }
+        
+        .status-active {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-inactive {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .status-expired {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border-left: 4px solid;
+            font-weight: bold;
+        }
+        
+        .alert-success {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+            border-left-color: #27ae60;
+        }
+        
+        .alert-error {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border-left-color: #e74c3c;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #B8860B;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .back-link:hover {
+            color: #FFA500;
+        }
+        
+        .secret-key-info {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+            .auth-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .users-table {
+                font-size: 12px;
+            }
+            
+            .users-table th,
+            .users-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-link">← Voltar ao Sistema</a>
+            <h1>🔧 Painel de Administração</h1>
+        </div>
+
+        <!-- Container para mensagens de alerta -->
+        <div id="alert-container" style="display: none;"></div>
+
+        <!-- Formulário de Autenticação Admin -->
+        <div class="admin-card" id="auth-section">
+            <h3>🔑 Autenticação de Administrador</h3>
+            <div class="auth-form">
+                <div class="form-group">
+                    <label for="admin-secret">Chave Secreta:</label>
+                    <input type="password" id="admin-secret" placeholder="Digite a chave secreta">
+                </div>
+                <button class="btn btn-primary" onclick="authenticateAdmin()">Autenticar</button>
+            </div>
+        </div>
+
+        <!-- Seção de Administração (oculta inicialmente) -->
+        <div id="admin-section" style="display: none;">
+            <!-- Formulário para Criar Usuário -->
+            <div class="admin-card">
+                <h3>👤 Criar Novo Usuário</h3>
+                <form id="create-user-form">
+                    <div class="auth-form">
+                        <div class="form-group">
+                            <label for="new-username">Username:</label>
+                            <input type="text" id="new-username" placeholder="Username único" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">Senha (6 dígitos):</label>
+                            <input type="text" id="new-password" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expires-days">Dias para Expirar:</label>
+                            <select id="expires-days">
+                                <option value="">Sem expiração</option>
+                                <option value="7">7 dias</option>
+                                <option value="15">15 dias</option>
+                                <option value="30" selected>30 dias</option>
+                                <option value="60">60 dias</option>
+                                <option value="90">90 dias</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Criar Usuário</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Lista de Usuários -->
+            <div class="admin-card">
+                <h3>📋 Gerenciar Usuários</h3>
+                <button class="btn btn-primary" onclick="loadUsers()">🔄 Atualizar Lista</button>
+                
+                <div id="users-loading" class="loading" style="display: none;">
+                    Carregando usuários...
+                </div>
+                
+                <table class="users-table" id="users-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Status</th>
+                            <th>Expira em</th>
+                            <th>Criado em</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminSecretKey = '';
+        
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert ${type === 'success' ? 'alert-success' : 'alert-error'}">
+                    ${message}
+                </div>
+            `;
+            alertContainer.style.display = 'block';
+            
+            setTimeout(() => {
+                alertContainer.style.display = 'none';
+            }, 5000);
+        }
+
+        function authenticateAdmin() {
+            const secretKey = document.getElementById('admin-secret').value.trim();
+            
+            if (!secretKey) {
+                showAlert('Digite a chave secreta');
+                return;
+            }
+            
+            adminSecretKey = secretKey;
+            
+            // Testa a chave fazendo uma requisição
+            fetch('/api/admin/users', {
+                headers: {
+                    'X-Admin-Secret': adminSecretKey
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('auth-section').style.display = 'none';
+                    document.getElementById('admin-section').style.display = 'block';
+                    showAlert('Autenticação realizada com sucesso!', 'success');
+                    loadUsers();
+                } else {
+                    showAlert('Chave secreta inválida!');
+                }
+            })
+            .catch(error => {
+                showAlert('Erro ao autenticar: ' + error.message);
+            });
+        }
+
+        function loadUsers() {
+            const loading = document.getElementById('users-loading');
+            const table = document.getElementById('users-table');
+            
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            
+            fetch('/api/admin/users', {
+                headers: {
+                    'X-Admin-Secret': adminSecretKey
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                table.style.display = 'table';
+                displayUsers(data.users);
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showAlert('Erro ao carregar usuários: ' + error.message);
+            });
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                
+                let statusText = '';
+                let statusClass = '';
+                
+                if (!user.is_active) {
+                    statusText = 'Inativo';
+                    statusClass = 'status-inactive';
+                } else if (user.is_expired) {
+                    statusText = 'Expirado';
+                    statusClass = 'status-expired';
+                } else {
+                    statusText = 'Ativo';
+                    statusClass = 'status-active';
+                }
+                
+                const expiresAt = user.expires_at 
+                    ? new Date(user.expires_at).toLocaleDateString('pt-BR')
+                    : 'Nunca';
+                
+                const createdAt = new Date(user.created_at).toLocaleDateString('pt-BR');
+                
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                    <td>${expiresAt}</td>
+                    <td>${createdAt}</td>
+                    <td>
+                        <button class="btn ${user.is_active ? 'btn-warning' : 'btn-success'}" 
+                                onclick="toggleUserStatus(${user.id})">
+                            ${user.is_active ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button class="btn btn-primary" onclick="extendUser(${user.id})">
+                            Estender
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">
+                            Deletar
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function toggleUserStatus(userId) {
+            fetch(`/api/admin/users/${userId}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    'X-Admin-Secret': adminSecretKey
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message, 'success');
+                loadUsers();
+            })
+            .catch(error => {
+                showAlert('Erro: ' + error.message);
+            });
+        }
+
+        function extendUser(userId) {
+            const days = prompt('Quantos dias estender?', '30');
+            if (!days || isNaN(days)) return;
+            
+            fetch(`/api/admin/users/${userId}/extend`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Secret': adminSecretKey
+                },
+                body: JSON.stringify({ days: parseInt(days) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message, 'success');
+                loadUsers();
+            })
+            .catch(error => {
+                showAlert('Erro: ' + error.message);
+            });
+        }
+
+        function deleteUser(userId, username) {
+            if (!confirm(`Tem certeza que deseja deletar o usuário "${username}"?`)) {
+                return;
+            }
+            
+            fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Admin-Secret': adminSecretKey
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message, 'success');
+                loadUsers();
+            })
+            .catch(error => {
+                showAlert('Erro: ' + error.message);
+            });
+        }
+
+        // Formulário de criar usuário
+        document.getElementById('create-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value.trim();
+            const expiresDays = document.getElementById('expires-days').value;
+            
+            if (!username || !password) {
+                showAlert('Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            if (password.length !== 6 || !/^\d+$/.test(password)) {
+                showAlert('A senha deve ter exatamente 6 dígitos');
+                return;
+            }
+            
+            const data = {
+                username: username,
+                password: password,
+                expires_days: expiresDays ? parseInt(expiresDays) : null
+            };
+            
+            fetch('/api/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Secret': adminSecretKey
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message.includes('sucesso')) {
+                    showAlert(data.message, 'success');
+                    document.getElementById('create-user-form').reset();
+                    document.getElementById('expires-days').value = '30';
+                    loadUsers();
+                } else {
+                    showAlert(data.message);
+                }
+            })
+            .catch(error => {
+                showAlert('Erro: ' + error.message);
+            });
+        });
+
+        // Validação em tempo real da senha
+        document.getElementById('new-password').addEventListener('input', function(e) {
+            const value = e.target.value;
+            e.target.value = value.replace(/\D/g, '');
+        });
+
+        // Enter para autenticação
+        document.getElementById('admin-secret').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                authenticateAdmin();
+            }
+        });
+    </script>
+</body>
+</html>

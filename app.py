@@ -2,10 +2,10 @@ from flask import Flask, jsonify, render_template, redirect, url_for, request
 from flask_cors import CORS
 from services.cache_service import CacheService
 import threading
-from auth import auth_bp, init_db
+from auth import auth_bp, init_db, ADMIN_SECRET_KEY
 from auth import token_required
 import jwt
-from config import UPDATE_INTERVAL  # Importa a variável de configuração
+from config import UPDATE_INTERVAL
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_super_segura_aqui'
@@ -21,11 +21,15 @@ app.register_blueprint(auth_bp)
 def index(current_user):
     return render_template('index.html')
 
-
 @app.route('/calculadora')
 @token_required
 def calculadora(current_user):
     return render_template('calculadora.html')
+
+@app.route('/admin')
+def admin_panel():
+    """Página de administração de usuários"""
+    return render_template('admin.html')
 
 @app.route('/api/config')
 def api_config():
@@ -37,17 +41,9 @@ def api_config():
 
 @app.route('/login')
 def login_page():
-    # Verifique se já há um token válido
-    token = request.cookies.get('auth_token')
-    if token:
-        try:
-            jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            # Se o token for válido, redirecione para a página inicial
-            return redirect(url_for('index'))
-        except:
-            # Token inválido, continuar para a página de login
-            pass
-    return render_template('login_register.html')
+    # REMOVER: A verificação automática de token pode causar loops
+    # Apenas retornar a página de login diretamente
+    return render_template('login.html')
 
 @app.route('/api/comparacao')
 def api_comparacao():

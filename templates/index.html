@@ -450,11 +450,55 @@
         .calculator-button:hover {
             background-color: #FFA500;
         }
+
+        .user-menu {
+            position: absolute;
+            top: 20px;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .admin-link {
+            background-color: #9b59b6;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .admin-link:hover {
+            background-color: #8e44ad;
+            text-decoration: none;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <div class="user-menu">
+                <a href="/admin" class="admin-link">🔧 Admin</a>
+                <button onclick="logout()" class="logout-btn">🚪 Sair</button>
+            </div>
             <svg class="logo" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <text x="10" y="45" font-size="36" font-weight="bold" fill="#FFD700">MT</text>
                 <text x="10" y="70" font-size="20" fill="#FFD700">CRYPTO</text>
@@ -1101,6 +1145,14 @@
             
             // Aplica os filtros
             aplicarFiltrosEExibir();
+        }
+
+        function logout() {
+            // Remove o cookie
+            document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            
+            // Redireciona para login
+            window.location.href = '/login';
         }
     </script>
     
