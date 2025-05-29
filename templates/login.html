@@ -193,8 +193,8 @@
                     <input type="text" id="login-username" name="username" placeholder="Digite seu username" required>
                 </div>
                 <div class="form-group">
-                    <label for="login-password">🔒 Senha (6 dígitos):</label>
-                    <input type="password" id="login-password" name="password" placeholder="Digite sua senha de 6 dígitos" required maxlength="6" pattern="[0-9]{6}">
+                    <label for="login-password">🔒 Senha (mín. 6 caracteres):</label>
+                    <input type="password" id="login-password" name="password" placeholder="Digite sua senha (mín. 6 caracteres)" required minlength="6">
                 </div>
                 <button type="submit" class="auth-btn" id="login-btn">Entrar</button>
             </form>
@@ -249,8 +249,8 @@
                 return;
             }
             
-            if (password.length !== 6 || !/^\d+$/.test(password)) {
-                showAlert('A senha deve ter exatamente 6 dígitos.');
+            if (password.length < 6) {
+                showAlert('A senha deve ter pelo menos 6 caracteres.');
                 return;
             }
             
@@ -285,13 +285,6 @@
             } finally {
                 setButtonLoading('login-btn', false);
             }
-        });
-
-        // Validação em tempo real da senha
-        document.getElementById('login-password').addEventListener('input', function(e) {
-            const value = e.target.value;
-            // Remove caracteres não numéricos
-            e.target.value = value.replace(/\D/g, '');
         });
 
         // Adicionar alguns efeitos visuais

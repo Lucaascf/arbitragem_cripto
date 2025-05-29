@@ -20,37 +20,91 @@ def init_db():
     conn = get_db_connection()
     
     try:
-        # Remove a tabela antiga se existir
-        conn.execute('DROP TABLE IF EXISTS users')
-        
-        # Cria a nova tabela com a estrutura correta
-        conn.execute('''
-            CREATE TABLE users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                is_active INTEGER DEFAULT 1,
-                expires_at TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-            )
+        # Verifica se a tabela já existe
+        cursor = conn.execute('''
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='users'
         ''')
         
-        conn.commit()
-        print("Banco de dados inicializado com sucesso!")
-        
+        if cursor.fetchone() is None:
+            # Só cria a tabela se ela não existir
+            conn.execute('''
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    is_active INTEGER DEFAULT 1,
+                    expires_at TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            conn.commit()
+            print("Banco de dados inicializado com sucesso!")
+        else:
+            print("Banco de dados já existe - mantendo dados existentes")
+            
     except Exception as e:
         print(f"Erro ao inicializar banco: {e}")
     finally:
         conn.close()
 
+@auth_bp.route('/api/admin/login', methods=['POST'])
+def admin_login():
+    """Login do administrador - retorna token em vez de usar chave diretamente"""
+    try:
+        data = request.get_json()
+        secret_key = data.get('secret_key', '').strip()
+        
+        if not secret_key:
+            return jsonify({'message': 'Chave secreta é obrigatória'}), 400
+            
+        if secret_key != ADMIN_SECRET_KEY:
+            return jsonify({'message': 'Chave secreta inválida'}), 401
+        
+        # Gera token admin válido por 4 horas
+        admin_token = jwt.encode({
+            'admin': True,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=4)
+        }, current_app.config['SECRET_KEY'], algorithm='HS256')
+        
+        return jsonify({'token': admin_token}), 200
+        
+    except Exception as e:
+        print(f"Erro no login admin: {e}")
+        return jsonify({'message': 'Erro interno do servidor'}), 500
+
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        secret_key = request.headers.get('X-Admin-Secret') or request.form.get('admin_secret')
+        token = None
         
-        if secret_key != ADMIN_SECRET_KEY:
-            return jsonify({'message': 'Acesso negado - Chave secreta inválida'}), 403
+        # Verifica se o token está nos headers
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+        
+        # Se não tiver token, retorna erro
+        if not token:
+            return jsonify({'message': 'Token de administrador requerido'}), 401
+        
+        try:
+            # Decodifica o token
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+            
+            # Verifica se é token de admin
+            if not data.get('admin'):
+                return jsonify({'message': 'Token inválido - não é admin'}), 403
+                
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'Token expirado'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Token inválido'}), 401
+        except Exception as e:
+            print(f"Erro na verificação do token admin: {str(e)}")
+            return jsonify({'message': 'Erro na verificação do token'}), 401
             
         return f(*args, **kwargs)
     return decorated
@@ -140,8 +194,8 @@ def create_user():
     if not username or not password:
         return jsonify({'message': 'Username e senha são obrigatórios'}), 400
     
-    if len(password) != 6 or not password.isdigit():
-        return jsonify({'message': 'A senha deve ter exatamente 6 dígitos'}), 400
+    if len(password) < 6:
+        return jsonify({'message': 'A senha deve ter pelo menos 6 caracteres'}), 400
     
     # Calcular data de expiração
     expires_at = None

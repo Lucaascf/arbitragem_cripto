@@ -190,13 +190,30 @@
             color: #FFA500;
         }
         
-        .secret-key-info {
-            background-color: rgba(231, 76, 60, 0.1);
-            color: #e74c3c;
+        .admin-info {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
             padding: 15px;
             border-radius: 4px;
             margin-bottom: 20px;
-            border-left: 4px solid #e74c3c;
+            border-left: 4px solid #27ae60;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c0392b;
         }
         
         @media (max-width: 768px) {
@@ -240,6 +257,12 @@
 
         <!-- Seção de Administração (oculta inicialmente) -->
         <div id="admin-section" style="display: none;">
+            <!-- Info do Admin Logado -->
+            <div class="admin-info">
+                <span>✅ Sessão admin ativa</span>
+                <button class="logout-btn" onclick="logoutAdmin()">🚪 Sair</button>
+            </div>
+
             <!-- Formulário para Criar Usuário -->
             <div class="admin-card">
                 <h3>👤 Criar Novo Usuário</h3>
@@ -250,8 +273,8 @@
                             <input type="text" id="new-username" placeholder="Username único" required>
                         </div>
                         <div class="form-group">
-                            <label for="new-password">Senha (6 dígitos):</label>
-                            <input type="text" id="new-password" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required>
+                            <label for="new-password">Senha (mín. 6 caracteres):</label>
+                            <input type="text" id="new-password" placeholder="Mínimo 6 caracteres" minlength="6" required>
                         </div>
                         <div class="form-group">
                             <label for="expires-days">Dias para Expirar:</label>
@@ -297,7 +320,25 @@
     </div>
 
     <script>
-        let adminSecretKey = '';
+        // Função segura para armazenar token (não global)
+        const AdminSession = (function() {
+            let adminToken = null;
+            
+            return {
+                setToken: function(token) {
+                    adminToken = token;
+                },
+                getToken: function() {
+                    return adminToken;
+                },
+                clearToken: function() {
+                    adminToken = null;
+                },
+                isAuthenticated: function() {
+                    return adminToken !== null;
+                }
+            };
+        })();
         
         function showAlert(message, type = 'error') {
             const alertContainer = document.getElementById('alert-container');
@@ -321,27 +362,66 @@
                 return;
             }
             
-            adminSecretKey = secretKey;
-            
-            // Testa a chave fazendo uma requisição
-            fetch('/api/admin/users', {
+            // Faz login seguro via API
+            fetch('/api/admin/login', {
+                method: 'POST',
                 headers: {
-                    'X-Admin-Secret': adminSecretKey
-                }
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ secret_key: secretKey })
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    // Armazena token de forma segura
+                    AdminSession.setToken(data.token);
+                    
+                    // Limpa o campo da chave
+                    document.getElementById('admin-secret').value = '';
+                    
+                    // Mostra interface admin
                     document.getElementById('auth-section').style.display = 'none';
                     document.getElementById('admin-section').style.display = 'block';
                     showAlert('Autenticação realizada com sucesso!', 'success');
                     loadUsers();
                 } else {
-                    showAlert('Chave secreta inválida!');
+                    showAlert(data.message || 'Chave secreta inválida!');
                 }
             })
             .catch(error => {
                 showAlert('Erro ao autenticar: ' + error.message);
+                console.error('Erro:', error);
             });
+        }
+
+        function logoutAdmin() {
+            AdminSession.clearToken();
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('admin-section').style.display = 'none';
+            showAlert('Logout realizado com sucesso!', 'success');
+        }
+
+        function makeAuthenticatedRequest(url, options = {}) {
+            if (!AdminSession.isAuthenticated()) {
+                showAlert('Sessão expirou. Faça login novamente.');
+                logoutAdmin();
+                return Promise.reject(new Error('Não autenticado'));
+            }
+            
+            const headers = {
+                'Authorization': `Bearer ${AdminSession.getToken()}`,
+                ...options.headers
+            };
+            
+            return fetch(url, { ...options, headers })
+                .then(response => {
+                    if (response.status === 401) {
+                        showAlert('Sessão expirou. Faça login novamente.');
+                        logoutAdmin();
+                        throw new Error('Token expirado');
+                    }
+                    return response;
+                });
         }
 
         function loadUsers() {
@@ -351,21 +431,19 @@
             loading.style.display = 'block';
             table.style.display = 'none';
             
-            fetch('/api/admin/users', {
-                headers: {
-                    'X-Admin-Secret': adminSecretKey
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                loading.style.display = 'none';
-                table.style.display = 'table';
-                displayUsers(data.users);
-            })
-            .catch(error => {
-                loading.style.display = 'none';
-                showAlert('Erro ao carregar usuários: ' + error.message);
-            });
+            makeAuthenticatedRequest('/api/admin/users')
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    table.style.display = 'table';
+                    displayUsers(data.users);
+                })
+                .catch(error => {
+                    loading.style.display = 'none';
+                    if (error.message !== 'Token expirado') {
+                        showAlert('Erro ao carregar usuários: ' + error.message);
+                    }
+                });
         }
 
         function displayUsers(users) {
@@ -420,11 +498,8 @@
         }
 
         function toggleUserStatus(userId) {
-            fetch(`/api/admin/users/${userId}/toggle`, {
-                method: 'PUT',
-                headers: {
-                    'X-Admin-Secret': adminSecretKey
-                }
+            makeAuthenticatedRequest(`/api/admin/users/${userId}/toggle`, {
+                method: 'PUT'
             })
             .then(response => response.json())
             .then(data => {
@@ -432,7 +507,9 @@
                 loadUsers();
             })
             .catch(error => {
-                showAlert('Erro: ' + error.message);
+                if (error.message !== 'Token expirado') {
+                    showAlert('Erro: ' + error.message);
+                }
             });
         }
 
@@ -440,11 +517,10 @@
             const days = prompt('Quantos dias estender?', '30');
             if (!days || isNaN(days)) return;
             
-            fetch(`/api/admin/users/${userId}/extend`, {
+            makeAuthenticatedRequest(`/api/admin/users/${userId}/extend`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Admin-Secret': adminSecretKey
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ days: parseInt(days) })
             })
@@ -454,7 +530,9 @@
                 loadUsers();
             })
             .catch(error => {
-                showAlert('Erro: ' + error.message);
+                if (error.message !== 'Token expirado') {
+                    showAlert('Erro: ' + error.message);
+                }
             });
         }
 
@@ -463,11 +541,8 @@
                 return;
             }
             
-            fetch(`/api/admin/users/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-Admin-Secret': adminSecretKey
-                }
+            makeAuthenticatedRequest(`/api/admin/users/${userId}`, {
+                method: 'DELETE'
             })
             .then(response => response.json())
             .then(data => {
@@ -475,7 +550,9 @@
                 loadUsers();
             })
             .catch(error => {
-                showAlert('Erro: ' + error.message);
+                if (error.message !== 'Token expirado') {
+                    showAlert('Erro: ' + error.message);
+                }
             });
         }
 
@@ -492,22 +569,21 @@
                 return;
             }
             
-            if (password.length !== 6 || !/^\d+$/.test(password)) {
-                showAlert('A senha deve ter exatamente 6 dígitos');
+            if (password.length < 6) {
+                showAlert('A senha deve ter pelo menos 6 caracteres');
                 return;
             }
-            
+                
             const data = {
                 username: username,
                 password: password,
                 expires_days: expiresDays ? parseInt(expiresDays) : null
             };
             
-            fetch('/api/admin/users', {
+            makeAuthenticatedRequest('/api/admin/users', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Admin-Secret': adminSecretKey
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             })
@@ -523,14 +599,10 @@
                 }
             })
             .catch(error => {
-                showAlert('Erro: ' + error.message);
+                if (error.message !== 'Token expirado') {
+                    showAlert('Erro: ' + error.message);
+                }
             });
-        });
-
-        // Validação em tempo real da senha
-        document.getElementById('new-password').addEventListener('input', function(e) {
-            const value = e.target.value;
-            e.target.value = value.replace(/\D/g, '');
         });
 
         // Enter para autenticação
