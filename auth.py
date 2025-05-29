@@ -5,11 +5,11 @@ import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from flask import redirect, url_for
+from config import ADMIN_SECRET_KEY, SECRET_KEY
 
 auth_bp = Blueprint('auth_bp', __name__)
 
 # Chave secreta para acessar o painel de administração
-ADMIN_SECRET_KEY = "MT_CRYPTO_ADMIN_2025"
 
 def get_db_connection():
     conn = sqlite3.connect(current_app.config['DATABASE'])

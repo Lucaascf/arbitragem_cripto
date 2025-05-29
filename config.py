@@ -1,3 +1,25 @@
+import os
+from dotenv import load_dotenv
+
+# Carrega variáveis do arquivo .env
+load_dotenv()
+
+# Chaves de segurança - SEMPRE use as do .env
+SECRET_KEY = os.getenv('SECRET_KEY', 'sua_chave_secreta_super_segura_aqui')
+ADMIN_SECRET_KEY = os.getenv('ADMIN_SECRET_KEY', 'MT_CRYPTO_ADMIN_2025')
+
+# Configurações do sistema
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+PORT = int(os.getenv('PORT', 5000))
+DATABASE_PATH = os.getenv('DATABASE_PATH', 'database.db')
+
+# Configurações técnicas
+UPDATE_INTERVAL = int(os.getenv('UPDATE_INTERVAL', 2))
+CROSSING_THRESHOLD = float(os.getenv('CROSSING_THRESHOLD', 0.05))
+CROSSING_WINDOW_30MIN = 1800
+
+
+
 MOEDAS_PERMITIDAS = {
     '1DOLLARUSDT', '1INCHUSDT', 'A8USDT', 'AAVEUSDT', 'ACAUSDT', 
     'ACEUSDT', 'ACHUSDT', 'ACSUSDT', 'ACTUSDT', 'ACXUSDT',
@@ -136,8 +158,9 @@ MOEDAS_PERMITIDAS = {
     'ZKJUSDT', 'ZORAUSDT', 'ZRCUSDT', 'ZROUSDT', 'ZRXUSDT'
 }
 
-# Constantes de configuração para cruzamentos
+
+"""# Constantes de configuração para cruzamentos
 CROSSING_THRESHOLD = 0.05  # Percentual de diferença para considerar um cruzamento (0.1%)
 CROSSING_WINDOW_30MIN = 1800  # 30 minutos em segundos
 
-UPDATE_INTERVAL = 2
+UPDATE_INTERVAL = 2"""
