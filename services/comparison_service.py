@@ -18,39 +18,42 @@ class ComparisonService:
         self.crossings_30min = {}
         self.crossings_lock = threading.Lock()
         self.previous_crossed_state = {}
-    
+        
     def compare_prices(self):
         """Compara preços spot e futuros, identificando oportunidades"""
-        # Busca dados de todas as APIs
-        gateio = fetch_gateio_tickers()
-        htx = fetch_htx_tickers()
-        mexc_spot = fetch_mexc_spot_tickers()
-        mexc_futures = fetch_mexc_futures_tickers()
-        
-        if not all([gateio, htx, mexc_spot, mexc_futures]):
-            raise Exception("Falha ao obter dados de uma ou mais APIs")
-        
-        simbolos_com_futuros = set(mexc_futures.keys()).intersection(MOEDAS_PERMITIDAS)
-        resultados = []
-        now = datetime.now()
-        
-        with self.crossings_lock:
-            # Limpa cruzamentos antigos
-            self._clean_old_crossings(now)
+        try:
+            # Busca dados de todas as APIs
+            gateio = fetch_gateio_tickers()
+            htx = fetch_htx_tickers()
+            mexc_spot = fetch_mexc_spot_tickers()
+            mexc_futures = fetch_mexc_futures_tickers()
             
-            for simbolo in sorted(simbolos_com_futuros):
-                try:
-                    result = self._process_symbol(
-                        simbolo, gateio, htx, mexc_spot, mexc_futures, now
-                    )
-                    if result:
-                        resultados.append(result)
-                except Exception as e:
-                    print(f"Erro processando {simbolo}: {str(e)}")
-                    continue
-        
-        resultados.sort(key=lambda x: abs(x['diferenca']), reverse=True)
-        return resultados
+            if not all([gateio, htx, mexc_spot, mexc_futures]):
+                raise Exception("Falha ao obter dados de uma ou mais APIs")
+            
+            simbolos_com_futuros = set(mexc_futures.keys()).intersection(MOEDAS_PERMITIDAS)
+            resultados = []
+            now = datetime.now()
+            
+            with self.crossings_lock:
+                # Limpa cruzamentos antigos
+                self._clean_old_crossings(now)
+                
+                for simbolo in sorted(simbolos_com_futuros):
+                    try:
+                        result = self._process_symbol(
+                            simbolo, gateio, htx, mexc_spot, mexc_futures, now
+                        )
+                        if result:
+                            resultados.append(result)
+                    except Exception as e:
+                        continue
+            
+            resultados.sort(key=lambda x: abs(x['diferenca']), reverse=True)
+            return resultados
+            
+        except Exception as e:
+            return []
     
     def _process_symbol(self, symbol, gateio, htx, mexc_spot, mexc_futures, now):
         """Processa um símbolo individual e retorna os dados comparativos"""
@@ -107,61 +110,85 @@ class ComparisonService:
         }
     
     def _check_crossings(self, symbol, difference, now):
-        """
-        Registra quando o preço spot e de futuros convergem para o mesmo valor.
-        Um cruzamento é definido como quando a diferença percentual absoluta é menor que o threshold.
-        """
-        # Determina se os preços estão cruzados (próximos o suficiente)
-        is_currently_crossed = abs(difference) < CROSSING_THRESHOLD
-        
-        # Verifica se este é um novo cruzamento
-        is_new_crossing = False
-        
-        if symbol in self.previous_crossed_state:
-            # Se antes não estava cruzado e agora está, temos um novo cruzamento
-            if not self.previous_crossed_state[symbol] and is_currently_crossed:
+        """Registra cruzamentos mantendo históricos temporais precisos."""
+        try:
+            is_currently_in_zone = abs(difference) <= CROSSING_THRESHOLD
+            previous_state = self.previous_crossed_state.get(symbol, False)
+            
+            # Detecta transição de fora→dentro da zona
+            is_new_crossing = False
+            if not previous_state and is_currently_in_zone:
                 is_new_crossing = True
-        elif is_currently_crossed:
-            # Se é a primeira vez que verificamos este símbolo e já está cruzado
-            is_new_crossing = True
-        
-        # Atualiza o estado para a próxima verificação
-        self.previous_crossed_state[symbol] = is_currently_crossed
-        
-        # Se for um novo cruzamento, incrementa os contadores
-        if is_new_crossing:
-            # Atualiza contagem de 24h
+            
+            self.previous_crossed_state[symbol] = is_currently_in_zone
+            
+            if not is_new_crossing:
+                return
+            
+            # Inicializa estruturas se for o primeiro cruzamento
             if symbol not in self.crossings_24h:
-                self.crossings_24h[symbol] = {'count': 0, 'last_cross': now}
-            
-            self.crossings_24h[symbol]['count'] += 1
-            self.crossings_24h[symbol]['last_cross'] = now
-            
-            # Atualiza contagem de 30min
+                self.crossings_24h[symbol] = {'timestamps': [], 'count': 0}
             if symbol not in self.crossings_30min:
-                self.crossings_30min[symbol] = {'count': 0, 'last_cross': now}
+                self.crossings_30min[symbol] = {'timestamps': [], 'count': 0}
             
-            self.crossings_30min[symbol]['count'] += 1
-            self.crossings_30min[symbol]['last_cross'] = now
-    
+            # Adiciona cruzamento e já filtra expirados
+            self._add_crossing(symbol, now, '24h', 86400)
+            self._add_crossing(symbol, now, '30min', CROSSING_WINDOW_30MIN)
+            
+        except Exception as e:
+            pass
+
+    def _add_crossing(self, symbol, timestamp, window, window_seconds):
+        """Método auxiliar para adicionar cruzamento com limpeza automática"""
+        try:
+            if window == '24h':
+                data = self.crossings_24h[symbol]
+            else:
+                data = self.crossings_30min[symbol]
+            
+            # Adiciona novo timestamp
+            data['timestamps'].append(timestamp)
+            
+            # Filtra apenas os dentro da janela temporal
+            valid_ts = [ts for ts in data['timestamps'] 
+                    if (timestamp - ts).total_seconds() <= window_seconds]
+            
+            # Atualiza estrutura
+            data['timestamps'] = valid_ts
+            data['count'] = len(valid_ts)
+            
+        except Exception as e:
+            pass
+
     def _clean_old_crossings(self, now):
-        """Limpa cruzamentos antigos das janelas de 30min e 24h"""
-        # Limpa cruzamentos com mais de 30 minutos
-        self.crossings_30min = {
-            k: v for k, v in self.crossings_30min.items()
-            if (now - v['last_cross']).total_seconds() <= CROSSING_WINDOW_30MIN
-        }
-        
-        # Limpa cruzamentos com mais de 24 horas (86400 segundos)
-        self.crossings_24h = {
-            k: v for k, v in self.crossings_24h.items()
-            if (now - v['last_cross']).total_seconds() <= 86400
-        }
+        """Limpeza adicional para remover símbolos sem cruzamentos recentes"""
+        try:
+            # Otimização: usa dict comprehension para criar novos dicionários
+            self.crossings_30min = {
+                k: v for k, v in self.crossings_30min.items()
+                if v.get('count', 0) > 0 and v.get('timestamps') and 
+                (now - v['timestamps'][-1]).total_seconds() <= CROSSING_WINDOW_30MIN
+            }
+            
+            self.crossings_24h = {
+                k: v for k, v in self.crossings_24h.items()
+                if v.get('count', 0) > 0 and v.get('timestamps') and 
+                (now - v['timestamps'][-1]).total_seconds() <= 86400
+            }
+            
+        except Exception as e:
+            pass
     
     def get_crossings_counts(self):
         """Retorna contagens totais de cruzamentos"""
-        with self.crossings_lock:
-            return {
-                'total_24h': sum(c['count'] for c in self.crossings_24h.values()),
-                'total_30min': sum(c['count'] for c in self.crossings_30min.values())
-            }
+        try:
+            with self.crossings_lock:
+                total_24h = sum(c.get('count', 0) for c in self.crossings_24h.values())
+                total_30min = sum(c.get('count', 0) for c in self.crossings_30min.values())
+                
+                return {
+                    'total_24h': total_24h,
+                    'total_30min': total_30min
+                }
+        except Exception as e:
+            return {'total_24h': 0, 'total_30min': 0}

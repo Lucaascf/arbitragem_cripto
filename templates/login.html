@@ -202,6 +202,13 @@
     </div>
 
     <script>
+        // SUBSTITUIR todo o JavaScript do arquivo login.html por este código seguro
+        
+        // Rate limiting simples no frontend
+        let loginAttempts = 0;
+        let lastAttempt = 0;
+        const ATTEMPT_DELAY = 3000; // 3 segundos entre tentativas
+
         // Função para mostrar alertas
         function showAlert(message, type = 'error') {
             const alertContainer = document.getElementById('alert-container');
@@ -237,12 +244,25 @@
             window.location.href = '/';
         }
 
+        // Validação de input segura
+        function sanitizeInput(input) {
+            return input.trim().replace(/[<>\"']/g, ''); // Remove caracteres perigosos
+        }
+
         // Manipulador de eventos para o formulário de login
         document.getElementById('login-form').addEventListener('submit', async function(event) {
             event.preventDefault();
             
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value;
+            // Rate limiting simples
+            const now = Date.now();
+            if (loginAttempts >= 3 && (now - lastAttempt) < ATTEMPT_DELAY) {
+                const remaining = Math.ceil((ATTEMPT_DELAY - (now - lastAttempt)) / 1000);
+                showAlert(`Muitas tentativas. Aguarde ${remaining} segundos.`);
+                return;
+            }
+            
+            const username = sanitizeInput(document.getElementById('login-username').value);
+            const password = document.getElementById('login-password').value; // Senha não sanitiza (pode ter caracteres especiais)
             
             if (!username || !password) {
                 showAlert('Por favor, preencha todos os campos.');
@@ -255,6 +275,7 @@
             }
             
             setButtonLoading('login-btn', true);
+            lastAttempt = now;
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -262,14 +283,17 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include' // Importante: permite cookies HttpOnly
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Definir apenas o cookie, sem localStorage
-                    document.cookie = `auth_token=${data.token}; path=/; max-age=${60*60*24}`;
+                    // Reset contador de tentativas
+                    loginAttempts = 0;
+                    
+                    // NÃO define cookie manualmente - o backend já fez isso com segurança
                     showAlert('✅ Login realizado com sucesso! Redirecionando...', 'success');
                     
                     // Aguardar um momento antes de redirecionar
@@ -277,9 +301,12 @@
                         redirectToHomePage();
                     }, 1500);
                 } else {
-                    showAlert('❌ ' + (data.message || 'Erro ao fazer login. Verifique suas credenciais.'));
+                    // Incrementa tentativas falhas
+                    loginAttempts++;
+                    showAlert('❌ ' + (data.message || 'Credenciais inválidas.'));
                 }
             } catch (error) {
+                loginAttempts++;
                 showAlert('❌ Erro ao conectar ao servidor. Tente novamente mais tarde.');
                 console.error('Erro:', error);
             } finally {

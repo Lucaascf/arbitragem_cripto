@@ -555,6 +555,14 @@
     </div>
 
     <script>
+        // Função de sanitização para segurança
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return '';
+            return input.trim()
+                    .replace(/[<>\"'&]/g, '') // Remove caracteres perigosos
+                    .substring(0, 50); // Limita tamanho
+        }
+
         let allCoinsData = [];
         let autoRefreshInterval;
         let AUTO_REFRESH_INTERVAL = 10000; // Valor padrão, será atualizado pela API
@@ -580,11 +588,6 @@
             moedasSelecionadas: {} // Será preenchido com todas as moedas disponíveis
         };
 
-        let dataCache = {
-            timestamp: 0,
-            data: []
-        };
-        
         const CONSTANTS = {
             FILTER_DEBOUNCE_DELAY: 300,
             VOLUME_THRESHOLD: {
@@ -833,19 +836,18 @@
                 const moedaMatch = simboloLimpo.includes(filtrosAtivos.moeda);
                 
                 let diferencaMatch = true;
-                let volumeMatch = true;
-                
                 if (filtrosAtivos.diferenca === 'positive') diferencaMatch = moeda.diferenca > 0;
                 else if (filtrosAtivos.diferenca === 'negative') diferencaMatch = moeda.diferenca < 0;
                 else if (filtrosAtivos.diferenca === 'significant') diferencaMatch = Math.abs(moeda.diferenca) > 2;
                 
+                let volumeMatch = true;
                 const volumeTotal = moeda.volume_spot + moeda.volume_futuros;
                 if (filtrosAtivos.volume === 'high') volumeMatch = volumeTotal >= CONSTANTS.VOLUME_THRESHOLD.HIGH;
                 else if (filtrosAtivos.volume === 'medium') volumeMatch = volumeTotal >= CONSTANTS.VOLUME_THRESHOLD.MEDIUM;
                 
                 // Filtros avançados
                 const corretoraMatch = filtrosAvancados.corretoras[moeda.corretora_spot];
-                const moedaSelecionada = filtrosAvancados.moedasSelecionadas[moeda.simbolo] !== false; // Se não estiver definido, considera true
+                const moedaSelecionada = filtrosAvancados.moedasSelecionadas[moeda.simbolo] !== false;
                 const lucroMinMatch = moeda.diferenca >= filtrosAvancados.lucroMinimo;
                 const lucroMaxMatch = moeda.diferenca <= filtrosAvancados.lucroMaximo;
                 
@@ -853,31 +855,40 @@
                     corretoraMatch && moedaSelecionada && lucroMinMatch && lucroMaxMatch;
             });
             
-            // Ordena os dados com base na opção selecionada
+            // CORREÇÃO: Ordena com PRIORIDADE SEMPRE para diferenças positivas
             dadosFiltrados.sort((a, b) => {
+                // PRIORIDADE 1: Diferenças positivas sempre vêm primeiro
+                const aPositiva = a.diferenca > 0;
+                const bPositiva = b.diferenca > 0;
+                
+                if (aPositiva && !bPositiva) return -1; // a é positiva, b não é -> a vem primeiro
+                if (!aPositiva && bPositiva) return 1;  // b é positiva, a não é -> b vem primeiro
+                
+                // PRIORIDADE 2: Se ambas são do mesmo tipo, aplica ordenação secundária
                 switch(filtrosAtivos.ordenacao) {
                     case 'crossings_24h':
-                        return b.crossings_24h - a.crossings_24h; // Ordem decrescente
+                        return b.crossings_24h - a.crossings_24h;
                     case 'crossings_30min':
-                        return b.crossings_30min - a.crossings_30min; // Ordem decrescente
+                        return b.crossings_30min - a.crossings_30min;
                     case 'volume':
                         const volumeA = a.volume_spot + a.volume_futuros;
                         const volumeB = b.volume_spot + b.volume_futuros;
-                        return volumeB - volumeA; // Ordem decrescente
+                        return volumeB - volumeA;
                     case 'symbol':
-                        return a.simbolo.localeCompare(b.simbolo); // Ordem alfabética
+                        return a.simbolo.localeCompare(b.simbolo);
                     case 'difference':
                     default:
-                        return Math.abs(b.diferenca) - Math.abs(a.diferenca); // Ordem decrescente por diferença absoluta
+                        // Para diferenças: sempre ordenar por valor da diferença (maior primeiro)
+                        return b.diferenca - a.diferenca;
                 }
             });
             
-            // Aplica o limite de moedas - ESTE É O CÓDIGO QUE ESTAVA NO LUGAR ERRADO
+            // Aplica o limite de moedas
             const dadosLimitados = filtrosAtivos.limiteMoedas === 'all' 
                 ? dadosFiltrados 
                 : dadosFiltrados.slice(0, parseInt(filtrosAtivos.limiteMoedas));
             
-            // Exibe os dados limitados e não os dados filtrados
+            // Exibe os dados limitados
             exibirDados(dadosLimitados);
         }
 
@@ -887,8 +898,10 @@
                 clearInterval(autoRefreshInterval);
             }
             
-            // Configura novo intervalo usando a variável dinâmica
-            autoRefreshInterval = setInterval(fetchData, AUTO_REFRESH_INTERVAL);
+            // Configura novo intervalo
+            autoRefreshInterval = setInterval(() => {
+                fetchData();
+            }, AUTO_REFRESH_INTERVAL);
         }
         
         function manualRefresh() {
@@ -911,30 +924,21 @@
         }
 
         function fetchData() {
-            // Verificar idade do cache (10 segundos)
-            const now = Date.now();
-            const cacheAge = now - dataCache.timestamp;
-            
-            // Se o cache estiver atualizado, use-o
-            if (dataCache.data.length > 0 && cacheAge < 10000) {
-                const updateTimeElement = document.getElementById('update-time');
-                updateTimeElement.textContent = new Date(dataCache.timestamp).toLocaleString('pt-BR');
-                
-                // Aplicar dados do cache
-                allCoinsData = dataCache.data;
-                calcularEstatisticas(allCoinsData);
-                aplicarFiltrosEExibir();
-                
-                // Retornar uma promise resolvida para compatibilidade
-                return Promise.resolve(dataCache.data);
-            }
-            
-            // Caso contrário, buscar novos dados
             const updateTimeElement = document.getElementById('update-time');
-            const originalText = updateTimeElement.textContent;
             updateTimeElement.textContent = "Atualizando...";
             
-            return fetch('/api/comparacao')
+            // Adicionar timestamp para evitar cache do navegador
+            const timestamp = new Date().getTime();
+            const url = `/api/comparacao?t=${timestamp}`;
+            
+            return fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Erro na rede');
@@ -950,40 +954,24 @@
                     const now = new Date();
                     updateTimeElement.textContent = now.toLocaleString('pt-BR');
                     
-                    // Guarda as moedas selecionadas anteriormente
-                    const moedasSelecionadasAnterior = filtrosAvancados.moedasSelecionadas;
+                    // SEMPRE atualiza os dados
+                    allCoinsData = data.data || [];
                     
-                    // Armazena todos os dados para filtragem
-                    allCoinsData = data.data || data; // Compatível com ambas estruturas
-                    
-                    // Adiciona novas moedas que não existiam antes
+                    // Atualiza as moedas selecionadas
                     allCoinsData.forEach(moeda => {
-                        if (moedasSelecionadasAnterior[moeda.simbolo] === undefined) {
-                            moedasSelecionadasAnterior[moeda.simbolo] = true;
+                        if (filtrosAvancados.moedasSelecionadas[moeda.simbolo] === undefined) {
+                            filtrosAvancados.moedasSelecionadas[moeda.simbolo] = true;
                         }
                     });
                     
-                    // Atualiza as moedas selecionadas
-                    filtrosAvancados.moedasSelecionadas = moedasSelecionadasAnterior;
-                    
-                    // Calcula estatísticas com todos os dados
+                    // Calcula estatísticas e aplica filtros
                     calcularEstatisticas(allCoinsData);
-                    
-                    // Aplica os filtros atuais nos novos dados em vez de mostrar todos
                     aplicarFiltrosEExibir();
-                    
-                    // ADICIONE AQUI: Verificar se há novas oportunidades significativas (>3%)
-                    const oportunidadesSignificativas = allCoinsData.filter(moeda => Math.abs(moeda.diferenca) > 3);
-                    if (oportunidadesSignificativas.length > 0) {
-                        const melhor = oportunidadesSignificativas[0];
-                        mostrarNotificacao(`Nova oportunidade: ${melhor.simbolo.replace(/USDT$/, '')} com ${melhor.diferenca.toFixed(2)}% de diferença!`);
-                    }
                     
                     return data;
                 })
                 .catch(error => {
-                    console.error('Erro ao buscar dados:', error);
-                    updateTimeElement.textContent = originalText || 'Erro ao atualizar';
+                    updateTimeElement.textContent = 'Erro ao atualizar';
                     mostrarNotificacao('Erro ao buscar dados', 'error');
                 });
         }
@@ -1005,10 +993,8 @@
                 return;
             }
             
-            // Limpa o container mantendo o HTML para melhor performance
-            while (container.firstChild) {
-                container.removeChild(container.firstChild);
-            }
+            // FORÇAR limpeza completa
+            container.innerHTML = '';
             
             dados.forEach(moeda => {
                 const diferenca = moeda.diferenca;
@@ -1021,8 +1007,7 @@
                 const futuresClass = moeda.preco_futuros > moeda.preco_spot ? 'higher' : 
                                 (moeda.preco_futuros < moeda.preco_spot ? 'lower' : 'equal');
                 
-                // Remove o sufixo USDT do símbolo da moeda
-                const simboloLimpo = moeda.simbolo.replace(/USDT$/, '');
+                const simboloLimpo = sanitizeInput(moeda.simbolo.replace(/USDT$/, ''));
                 
                 const card = document.createElement('div');
                 card.className = 'coin-card';
@@ -1064,12 +1049,13 @@
                         <div class="price-item">
                             <div class="price-label">Cruzamentos</div>
                             <div class="price-value">
-                                <span title="Últimas 24 horas">24h: ${moeda.crossings_24h}</span> | 
-                                <span title="Últimos 30 minutos">30m: ${moeda.crossings_30min}</span>
+                                <span title="Últimas 24 horas">24h: ${moeda.crossings_24h || 0}</span> | 
+                                <span title="Últimos 30 minutos">30m: ${moeda.crossings_30min || 0}</span>
                             </div>
                         </div>
                     </div>
                 `;
+                
                 card.querySelectorAll('.calculator-button').forEach(button => {
                     button.addEventListener('click', function() {
                         const symbol = this.getAttribute('data-symbol');
@@ -1077,8 +1063,21 @@
                         const futurePrice = parseFloat(this.getAttribute('data-future'));
                         const exchange = this.getAttribute('data-exchange');
                         
-                        // Não inverter os valores, passar exatamente como estão
-                        window.location.href = `/calculadora?symbol=${encodeURIComponent(symbol)}&spotPrice=${spotPrice}&futurePrice=${futurePrice}&buyExchange=${encodeURIComponent(exchange)}&shortExchange=MEXC`;
+                        const calculatorData = {
+                            symbol: symbol,
+                            spotPrice: spotPrice,
+                            futurePrice: futurePrice,
+                            buyExchange: exchange,
+                            shortExchange: 'MEXC',
+                            timestamp: Date.now()
+                        };
+                        
+                        try {
+                            sessionStorage.setItem('calculatorData', JSON.stringify(calculatorData));
+                            window.location.href = '/calculadora';
+                        } catch (error) {
+                            window.location.href = `/calculadora?symbol=${encodeURIComponent(symbol)}`;
+                        }
                     });
                 });
                                 
@@ -1092,30 +1091,45 @@
             // Total de moedas
             document.getElementById('total-coins').textContent = dados.length;
             
-            // Diferença média absoluta - mostra a magnitude média das diferenças
+            // Diferença média absoluta
             const totalAbsDiff = dados.reduce((sum, moeda) => sum + Math.abs(moeda.diferenca), 0);
             const avgDiff = totalAbsDiff / dados.length;
             document.getElementById('avg-difference').textContent = avgDiff.toFixed(2) + '%';
             
-            // Melhor oportunidade (maior diferença absoluta)
-            let melhorOportunidade = dados[0];
-            dados.forEach(moeda => {
-                if (Math.abs(moeda.diferenca) > Math.abs(melhorOportunidade.diferenca)) {
-                    melhorOportunidade = moeda;
-                }
-            });
+            // Melhor oportunidade
+            const oportunidadesPositivas = dados.filter(moeda => moeda.diferenca > 0);
             
-            // Remove o sufixo USDT do símbolo da moeda na melhor oportunidade
-            const simboloLimpo = melhorOportunidade.simbolo.replace(/USDT$/, '');
+            let melhorOportunidadeTexto = 'Nenhuma oportunidade';
             
-            document.getElementById('best-opportunity').textContent = 
-                `${simboloLimpo} (${melhorOportunidade.diferenca > 0 ? '+' : ''}${melhorOportunidade.diferenca.toFixed(2)}%)`;
+            if (oportunidadesPositivas.length > 0) {
+                const melhorOportunidade = oportunidadesPositivas.reduce((melhor, atual) => 
+                    atual.diferenca > melhor.diferenca ? atual : melhor
+                );
+                
+                const simboloLimpo = melhorOportunidade.simbolo.replace(/USDT$/, '');
+                melhorOportunidadeTexto = `${simboloLimpo} (+${melhorOportunidade.diferenca.toFixed(2)}%)`;
+            }
             
-            // Total de cruzamentos
-            const total24h = dados.reduce((sum, moeda) => sum + moeda.crossings_24h, 0);
-            const total30min = dados.reduce((sum, moeda) => sum + moeda.crossings_30min, 0);
-            document.getElementById('total-crossings-24h').textContent = total24h;
-            document.getElementById('total-crossings-30min').textContent = total30min;
+            document.getElementById('best-opportunity').textContent = melhorOportunidadeTexto;
+            
+            // Total de cruzamentos - FORÇAR ATUALIZAÇÃO
+            const total24h = dados.reduce((sum, moeda) => sum + (moeda.crossings_24h || 0), 0);
+            const total30min = dados.reduce((sum, moeda) => sum + (moeda.crossings_30min || 0), 0);
+            
+            const elem24h = document.getElementById('total-crossings-24h');
+            const elem30min = document.getElementById('total-crossings-30min');
+            
+            // Força atualização dos elementos
+            elem24h.textContent = total24h;
+            elem30min.textContent = total30min;
+            
+            // Força re-render
+            elem24h.style.display = 'none';
+            elem30min.style.display = 'none';
+            setTimeout(() => {
+                elem24h.style.display = '';
+                elem30min.style.display = '';
+            }, 10);
         }
         
         function aplicarFiltros() {
@@ -1131,11 +1145,16 @@
         }
 
         function logout() {
-            // Remove o cookie
-            document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            
-            // Redireciona para login
-            window.location.href = '/login';
+            // Faz logout via API para invalidar o token no servidor
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+            }).finally(() => {
+                // Remove o cookie localmente também
+                document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                // Redireciona para login
+                window.location.href = '/login';
+            });
         }
     </script>
     
@@ -1156,7 +1175,7 @@
                         </div>
                         <div class="range-input">
                             <label>Máximo (%)</label>
-                            <input type="number" id="lucro-maximo" class="filter-input" value="100" min="-100" max="1000">
+                            <input type="number" id="lucro-maximo" class="filter-input" value="100" min="-100" max="10000">
                         </div>
                     </div>
                 </div>

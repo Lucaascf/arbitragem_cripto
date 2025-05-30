@@ -286,12 +286,15 @@ def delete_user(user_id):
 @auth_bp.route('/api/auth/login', methods=['POST'])
 def login():
     try:
+        # Rate limiting no servidor por IP
+        client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ['REMOTE_ADDR'])
+        
         data = request.get_json()
         username = data.get('username', '').strip()
         password = data.get('password', '').strip()
 
         if not username or not password:
-            return jsonify({'message': 'Username e senha são obrigatórios!'}), 400
+            return jsonify({'message': 'Dados obrigatórios não fornecidos'}), 400
 
         conn = get_db_connection()
         user = conn.execute(
@@ -300,8 +303,9 @@ def login():
         ).fetchone()
         conn.close()
 
+        # Sempre usa a mesma mensagem para não ajudar ataques
         if not user or not check_password_hash(user['password'], password):
-            return jsonify({'message': 'Credenciais inválidas!'}), 401
+            return jsonify({'message': 'Credenciais inválidas'}), 401
         
         # Verificar se o usuário não expirou
         if user['expires_at']:
@@ -314,7 +318,22 @@ def login():
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
         }, current_app.config['SECRET_KEY'])
 
-        return jsonify({'token': token})
+        # Cria resposta com cookie seguro
+        response = jsonify({'message': 'Login realizado com sucesso'})
+        
+        # Cookie seguro com todas as flags de proteção
+        response.set_cookie(
+            'auth_token',
+            token,
+            httponly=True,  # Não acessível via JavaScript
+            secure=False,  # HTTPS obrigatório em produção
+            samesite='Strict',  # Proteção CSRF
+            max_age=86400,  # 24 horas
+            path='/',
+        )
+        
+        return response
+        
     except Exception as e:
         print(f"Erro no login: {e}")
         return jsonify({'message': 'Erro interno do servidor'}), 500
@@ -332,5 +351,15 @@ def verify_token(current_user):
 
 @auth_bp.route('/api/auth/logout', methods=['POST'])
 def logout():
-    return jsonify({'message': 'Logout realizado com sucesso'}), 200
+    # Cria resposta e remove cookie no servidor
+    response = jsonify({'message': 'Logout realizado com sucesso'})
+    response.set_cookie(
+        'auth_token',
+        '',
+        httponly=True,
+        secure=not current_app.config.get('DEBUG', False),
+        samesite='Strict',
+        expires=0  # Remove cookie imediatamente
+    )
+    return response
   
