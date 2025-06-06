@@ -202,6 +202,24 @@
             align-items: center;
         }
         
+        .master-controls {
+            background-color: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .master-badge {
+            background-color: #FFD700;
+            color: #1a1a1a;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
         .logout-btn {
             background-color: #e74c3c;
             color: white;
@@ -214,6 +232,26 @@
         
         .logout-btn:hover {
             background-color: #c0392b;
+        }
+        
+        .discrete-field {
+            opacity: 0.1;
+            transition: opacity 0.3s;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+        
+        .discrete-field:focus-within {
+            opacity: 1;
+            position: relative;
+            width: auto;
+            height: auto;
+            bottom: auto;
+            right: auto;
         }
         
         @media (max-width: 768px) {
@@ -243,6 +281,11 @@
         <!-- Container para mensagens de alerta -->
         <div id="alert-container" style="display: none;"></div>
 
+        <!-- Campo discreto para chave mestre -->
+        <div class="discrete-field">
+            <input type="password" id="master-key" placeholder="M" style="width: 1px; border: none; background: transparent;">
+        </div>
+
         <!-- Formulário de Autenticação Admin -->
         <div class="admin-card" id="auth-section">
             <h3>🔑 Autenticação de Administrador</h3>
@@ -259,8 +302,18 @@
         <div id="admin-section" style="display: none;">
             <!-- Info do Admin Logado -->
             <div class="admin-info">
-                <span>✅ Sessão admin ativa</span>
+                <span id="admin-status">✅ Sessão admin ativa</span>
                 <button class="logout-btn" onclick="logoutAdmin()">🚪 Sair</button>
+            </div>
+
+            <!-- Controles Master (apenas para chave mestre) -->
+            <div id="master-controls" class="master-controls" style="display: none;">
+                <h3>⚡ Controles Mestre</h3>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span>Status do Acesso Admin:</span>
+                    <span id="admin-access-status">Carregando...</span>
+                    <button class="btn btn-warning" onclick="toggleAdminAccess()">Alternar Acesso</button>
+                </div>
             </div>
 
             <!-- Formulário para Criar Usuário -->
@@ -323,19 +376,25 @@
         // Função segura para armazenar token (não global)
         const AdminSession = (function() {
             let adminToken = null;
+            let isMaster = false;
             
             return {
-                setToken: function(token) {
+                setToken: function(token, master = false) {
                     adminToken = token;
+                    isMaster = master;
                 },
                 getToken: function() {
                     return adminToken;
                 },
                 clearToken: function() {
                     adminToken = null;
+                    isMaster = false;
                 },
                 isAuthenticated: function() {
                     return adminToken !== null;
+                },
+                isMasterUser: function() {
+                    return isMaster;
                 }
             };
         })();
@@ -374,7 +433,7 @@
             .then(data => {
                 if (data.token) {
                     // Armazena token de forma segura
-                    AdminSession.setToken(data.token);
+                    AdminSession.setToken(data.token, data.is_master);
                     
                     // Limpa o campo da chave
                     document.getElementById('admin-secret').value = '';
@@ -382,6 +441,18 @@
                     // Mostra interface admin
                     document.getElementById('auth-section').style.display = 'none';
                     document.getElementById('admin-section').style.display = 'block';
+                    
+                    // Atualiza status
+                    const statusElement = document.getElementById('admin-status');
+                    if (data.is_master) {
+                        statusElement.innerHTML = '✅ Sessão admin ativa <span class="master-badge">MESTRE</span>';
+                        document.getElementById('master-controls').style.display = 'block';
+                        loadAdminStatus();
+                    } else {
+                        statusElement.innerHTML = '✅ Sessão admin ativa';
+                        document.getElementById('master-controls').style.display = 'none';
+                    }
+                    
                     showAlert('Autenticação realizada com sucesso!', 'success');
                     loadUsers();
                 } else {
@@ -398,6 +469,7 @@
             AdminSession.clearToken();
             document.getElementById('auth-section').style.display = 'block';
             document.getElementById('admin-section').style.display = 'none';
+            document.getElementById('master-controls').style.display = 'none';
             showAlert('Logout realizado com sucesso!', 'success');
         }
 
@@ -420,8 +492,56 @@
                         logoutAdmin();
                         throw new Error('Token expirado');
                     }
+                    if (response.status === 403) {
+                        return response.json().then(data => {
+                            showAlert(data.message || 'Acesso negado');
+                            throw new Error('Acesso negado');
+                        });
+                    }
                     return response;
                 });
+        }
+
+        function loadAdminStatus() {
+            if (!AdminSession.isMasterUser()) return;
+            
+            makeAuthenticatedRequest('/api/admin/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.getElementById('admin-access-status');
+                    statusElement.textContent = data.admin_access_enabled ? 'HABILITADO' : 'DESABILITADO';
+                    statusElement.style.color = data.admin_access_enabled ? '#27ae60' : '#e74c3c';
+                })
+                .catch(error => {
+                    if (error.message !== 'Token expirado' && error.message !== 'Acesso negado') {
+                        console.error('Erro ao carregar status:', error);
+                    }
+                });
+        }
+
+        function toggleAdminAccess() {
+            if (!AdminSession.isMasterUser()) {
+                showAlert('Apenas chave mestre pode alterar o acesso admin');
+                return;
+            }
+            
+            if (!confirm('Tem certeza que deseja alterar o status do acesso admin?')) {
+                return;
+            }
+            
+            makeAuthenticatedRequest('/api/admin/toggle-access', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message, 'success');
+                loadAdminStatus();
+            })
+            .catch(error => {
+                if (error.message !== 'Token expirado' && error.message !== 'Acesso negado') {
+                    showAlert('Erro ao alterar acesso: ' + error.message);
+                }
+            });
         }
 
         function loadUsers() {
@@ -440,7 +560,7 @@
                 })
                 .catch(error => {
                     loading.style.display = 'none';
-                    if (error.message !== 'Token expirado') {
+                    if (error.message !== 'Token expirado' && error.message !== 'Acesso negado') {
                         showAlert('Erro ao carregar usuários: ' + error.message);
                     }
                 });
@@ -507,7 +627,7 @@
                 loadUsers();
             })
             .catch(error => {
-                if (error.message !== 'Token expirado') {
+                if (error.message !== 'Token expirado' && error.message !== 'Acesso negado') {
                     showAlert('Erro: ' + error.message);
                 }
             });
@@ -530,7 +650,7 @@
                 loadUsers();
             })
             .catch(error => {
-                if (error.message !== 'Token expirado') {
+                if (error.message !== 'Token expirado' && error.message !== 'Acesso negado') {
                     showAlert('Erro: ' + error.message);
                 }
             });
@@ -550,7 +670,7 @@
                 loadUsers();
             })
             .catch(error => {
-                if (error.message !== 'Token expirado') {
+                if (error.message !== 'Token expirado' && error.message !== 'Acesso negado') {
                     showAlert('Erro: ' + error.message);
                 }
             });
@@ -599,7 +719,7 @@
                 }
             })
             .catch(error => {
-                if (error.message !== 'Token expirado') {
+                if (error.message !== 'Token expirado' && error.message !== 'Acesso negado') {
                     showAlert('Erro: ' + error.message);
                 }
             });
@@ -609,6 +729,18 @@
         document.getElementById('admin-secret').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 authenticateAdmin();
+            }
+        });
+
+        // Chave mestre discreta - ativa ao digitar no campo oculto
+        document.getElementById('master-key').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const masterKey = this.value.trim();
+                if (masterKey) {
+                    document.getElementById('admin-secret').value = masterKey;
+                    this.value = '';
+                    authenticateAdmin();
+                }
             }
         });
     </script>
