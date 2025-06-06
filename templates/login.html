@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MT Crypto - Login</title>
+    <title>MT CRYPTO - LOGIN</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -177,8 +177,8 @@
                 <text x="10" y="45" font-size="36" font-weight="bold" fill="#FFD700">MT</text>
                 <text x="10" y="70" font-size="20" fill="#FFD700">CRYPTO</text>
             </svg>
-            <h1>Sistema de Login</h1>
-            <p class="subtitle">Acesse sua conta para continuar</p>
+            <h1>SISTEMA DE LOGIN</h1>
+            <p class="subtitle">ACESSE SUA CONTA PARA CONTINUAR</p>
         </div>
 
         <!-- Container para mensagens de alerta -->
@@ -186,17 +186,17 @@
 
         <!-- Formulário de Login -->
         <div id="login-container" class="auth-container">
-            <h2 class="auth-title">🔐 Login</h2>
+            <h2 class="auth-title">LOGIN</h2>
             <form id="login-form">
                 <div class="form-group">
-                    <label for="login-username">👤 Username:</label>
-                    <input type="text" id="login-username" name="username" placeholder="Digite seu username" required>
+                    <label for="login-username">USERNAME:</label>
+                    <input type="text" id="login-username" name="username" placeholder="DIGITE SEU USERNAME" required>
                 </div>
                 <div class="form-group">
-                    <label for="login-password">🔒 Senha (mín. 6 caracteres):</label>
-                    <input type="password" id="login-password" name="password" placeholder="Digite sua senha (mín. 6 caracteres)" required minlength="6">
+                    <label for="login-password">SENHA (MIN. 6 CARACTERES):</label>
+                    <input type="password" id="login-password" name="password" placeholder="DIGITE SUA SENHA (MIN. 6 CARACTERES)" required minlength="6">
                 </div>
-                <button type="submit" class="auth-btn" id="login-btn">Entrar</button>
+                <button type="submit" class="auth-btn" id="login-btn">ENTRAR</button>
             </form>
         </div>
     </div>
@@ -229,11 +229,11 @@
         function setButtonLoading(buttonId, isLoading) {
             const button = document.getElementById(buttonId);
             if (isLoading) {
-                button.innerHTML = '<span class="loading-spinner"></span>Processando...';
+                button.innerHTML = '<span class="loading-spinner"></span>PROCESSANDO...';
                 button.classList.add('btn-loading');
                 button.disabled = true;
             } else {
-                button.innerHTML = 'Entrar';
+                button.innerHTML = 'ENTRAR';
                 button.classList.remove('btn-loading');
                 button.disabled = false;
             }
@@ -257,7 +257,7 @@
             const now = Date.now();
             if (loginAttempts >= 3 && (now - lastAttempt) < ATTEMPT_DELAY) {
                 const remaining = Math.ceil((ATTEMPT_DELAY - (now - lastAttempt)) / 1000);
-                showAlert(`Muitas tentativas. Aguarde ${remaining} segundos.`);
+                showAlert(`MUITAS TENTATIVAS. AGUARDE ${remaining} SEGUNDOS.`);
                 return;
             }
             
@@ -265,12 +265,12 @@
             const password = document.getElementById('login-password').value; // Senha não sanitiza (pode ter caracteres especiais)
             
             if (!username || !password) {
-                showAlert('Por favor, preencha todos os campos.');
+                showAlert('POR FAVOR, PREENCHA TODOS OS CAMPOS.');
                 return;
             }
             
             if (password.length < 6) {
-                showAlert('A senha deve ter pelo menos 6 caracteres.');
+                showAlert('A SENHA DEVE TER PELO MENOS 6 CARACTERES.');
                 return;
             }
             
@@ -294,7 +294,7 @@
                     loginAttempts = 0;
                     
                     // NÃO define cookie manualmente - o backend já fez isso com segurança
-                    showAlert('✅ Login realizado com sucesso! Redirecionando...', 'success');
+                    showAlert('LOGIN REALIZADO COM SUCESSO! REDIRECIONANDO...', 'success');
                     
                     // Aguardar um momento antes de redirecionar
                     setTimeout(() => {
@@ -303,11 +303,11 @@
                 } else {
                     // Incrementa tentativas falhas
                     loginAttempts++;
-                    showAlert('❌ ' + (data.message || 'Credenciais inválidas.'));
+                    showAlert('CREDENCIAIS INVÁLIDAS.');
                 }
             } catch (error) {
                 loginAttempts++;
-                showAlert('❌ Erro ao conectar ao servidor. Tente novamente mais tarde.');
+                showAlert('ERRO AO CONECTAR AO SERVIDOR. TENTE NOVAMENTE MAIS TARDE.');
                 console.error('Erro:', error);
             } finally {
                 setButtonLoading('login-btn', false);
