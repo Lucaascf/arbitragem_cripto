@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Monitoramento - Arbitragem</title>
+    <title>SISTEMA DE MONITORAMENTO - ARBITRAGEM</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,6 +12,7 @@
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: #FFD700;
             min-height: 100vh;
+            text-transform: uppercase;
         }
         .container {
             max-width: 1200px;
@@ -27,6 +28,26 @@
             margin-bottom: 30px;
             padding: 20px 0;
             border-bottom: 2px solid #FFD700;
+            position: relative;
+        }
+        .current-symbol {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .symbol-label {
+            color: #B8860B;
+            font-size: 1.1em;
+            margin-right: 10px;
+        }
+        .symbol-value {
+            color: #FFD700;
+            font-size: 1.8em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         .logo {
             width: 150px;
@@ -165,6 +186,7 @@
             font-weight: bold;
             transition: background-color 0.3s;
             margin: 5px;
+            text-transform: uppercase;
         }
         button:hover {
             background-color: #FFA500;
@@ -341,113 +363,117 @@
                 <text x="5" y="35" font-size="28" font-weight="bold" fill="#FFD700">MT</text>
                 <text x="5" y="55" font-size="16" fill="#FFD700">CRYPTO</text>
             </svg>
-            <h1>Sistema de Monitoramento - Arbitragem</h1>
+            <h1>SISTEMA DE MONITORAMENTO - ARBITRAGEM</h1>
+            <div class="current-symbol">
+                <span class="symbol-label">MOEDA ATUAL:</span>
+                <span class="symbol-value" id="current-symbol-display">CARREGANDO...</span>
+            </div>
         </div>
         
         <div class="strategy-explanation">
-            <h3>🎯 Como Usar o Sistema de Monitoramento</h3>
+            <h3>COMO USAR O SISTEMA DE MONITORAMENTO</h3>
             <div class="step">
                 <span class="step-number">1</span>
-                <strong>Execute as operações</strong> manualmente (Comprar SPOT + Abrir SHORT)
+                <strong>EXECUTE AS OPERACOES</strong> MANUALMENTE (COMPRAR SPOT + ABRIR SHORT)
             </div>
             <div class="step">
                 <span class="step-number">2</span>
-                <strong>Preencha os preços</strong> de entrada que você executou
+                <strong>PREENCHA OS PRECOS</strong> DE ENTRADA QUE VOCE EXECUTOU
             </div>
             <div class="step">
                 <span class="step-number">3</span>
-                <strong>Clique "INICIAR MONITORAMENTO"</strong> para ativar alertas
+                <strong>CLIQUE "INICIAR MONITORAMENTO"</strong> PARA ATIVAR ALERTAS
             </div>
             <div class="step">
                 <span class="step-number">4</span>
-                <strong>Aguarde o alerta</strong> quando os preços cruzarem (hora de sair!)
+                <strong>AGUARDE O ALERTA</strong> QUANDO OS PRECOS CRUZAREM (HORA DE SAIR!)
             </div>
         </div>
 
         <div class="current-opportunity">
-            <div class="opportunity-title">📊 Situação Atual do Mercado</div>
-            <div id="current-analysis">Carregando dados...</div>
+            <div class="opportunity-title">SITUACAO ATUAL DO MERCADO</div>
+            <div id="current-analysis">CARREGANDO DADOS...</div>
         </div>
 
         <div class="alert-section" id="exit-alert">
-            <div class="alert-title" style="color: #e74c3c;">🚨 HORA DE SAIR! 🚨</div>
-            <div id="exit-message">Os preços cruzaram! É hora de fechar as posições.</div>
+            <div class="alert-title" style="color: #e74c3c;">HORA DE SAIR!</div>
+            <div id="exit-message">OS PRECOS CRUZARAM! E HORA DE FECHAR AS POSICOES.</div>
         </div>
 
         <div class="arbitrage-section">
             <div class="action-card buy-card">
-                <div class="card-title">💰 COMPRAR SPOT</div>
+                <div class="card-title">COMPRAR SPOT</div>
                 <div class="exchange-name" id="buy-exchange">-</div>
                 <div class="price-display buy-price" id="buy-price">0.00000000</div>
-                <div style="font-size: 0.9em; color: #27ae60;">Menor preço atual</div>
+                <div style="font-size: 0.9em; color: #27ae60;">MENOR PRECO ATUAL</div>
             </div>
             
             <div class="action-card sell-card">
-                <div class="card-title">📉 ABRIR SHORT</div>
+                <div class="card-title">ABRIR SHORT</div>
                 <div class="exchange-name" id="short-exchange">-</div>
                 <div class="price-display sell-price" id="short-price">0.00000000</div>
-                <div style="font-size: 0.9em; color: #e74c3c;">Maior preço atual</div>
+                <div style="font-size: 0.9em; color: #e74c3c;">MAIOR PRECO ATUAL</div>
             </div>
             
             <div class="action-card" id="result-card">
-                <div class="card-title" id="result-title">💎 SPREAD ATUAL</div>
+                <div class="card-title" id="result-title">SPREAD ATUAL</div>
                 <div class="price-display" id="potential-result">0.00%</div>
-                <div style="font-size: 0.9em;" id="result-description">Diferença entre preços</div>
+                <div style="font-size: 0.9em;" id="result-description">DIFERENCA ENTRE PRECOS</div>
             </div>
         </div>
 
         <div class="calculator-section">
-            <h3>💰 Configuração do Monitoramento</h3>
+            <h3>CONFIGURACAO DO MONITORAMENTO</h3>
             
             <div class="investment-section">
                 <div class="form-group">
-                    <label for="investment-amount">Valor Investido (USDT):</label>
+                    <label for="investment-amount">VALOR INVESTIDO (USDT):</label>
                     <input type="number" id="investment-amount" step="0.01" value="1000" min="1" max="1000000" placeholder="1000.00">
                 </div>
                 <div class="form-group">
-                    <label for="entry-buy-price">Preço de Entrada - Compra SPOT:</label>
-                    <input type="number" id="entry-buy-price" step="0.00000001" min="0" max="100000" placeholder="Ex: 0.12345678">
+                    <label for="entry-buy-price">PRECO DE ENTRADA - COMPRA SPOT:</label>
+                    <input type="number" id="entry-buy-price" step="0.00000001" min="0" max="100000" placeholder="EX: 0.12345678">
                 </div>
                 <div class="form-group">
-                    <label for="entry-short-price">Preço de Entrada - Short:</label>
-                    <input type="number" id="entry-short-price" step="0.00000001" min="0" max="100000" placeholder="Ex: 0.12456789">
+                    <label for="entry-short-price">PRECO DE ENTRADA - SHORT:</label>
+                    <input type="number" id="entry-short-price" step="0.00000001" min="0" max="100000" placeholder="EX: 0.12456789">
                 </div>
             </div>
 
             <div class="operation-controls">
-                <button id="fill-current-btn">📝 Usar Preços Atuais</button>
-                <button id="start-operation-btn" class="start-btn">🚀 INICIAR MONITORAMENTO</button>
-                <button id="stop-operation-btn" class="stop-btn" style="display: none;">⏹️ PARAR MONITORAMENTO</button>
+                <button id="fill-current-btn">USAR PRECOS ATUAIS</button>
+                <button id="start-operation-btn" class="start-btn">INICIAR MONITORAMENTO</button>
+                <button id="stop-operation-btn" class="stop-btn" style="display: none;">PARAR MONITORAMENTO</button>
             </div>
         </div>
 
         <div class="operation-status" id="operation-status">
-            <h3>📊 Status do Monitoramento</h3>
-            <div id="status-message">Nenhuma operação sendo monitorada</div>
+            <h3>STATUS DO MONITORAMENTO</h3>
+            <div id="status-message">NENHUMA OPERACAO SENDO MONITORADA</div>
             
             <div class="status-grid" id="status-grid" style="display: none;">
                 <div class="status-item">
-                    <div class="status-label">Preço de Entrada (Compra)</div>
+                    <div class="status-label">PRECO DE ENTRADA (COMPRA)</div>
                     <div class="status-value" id="entry-buy-display">-</div>
                 </div>
                 <div class="status-item">
-                    <div class="status-label">Preço de Entrada (Short)</div>
+                    <div class="status-label">PRECO DE ENTRADA (SHORT)</div>
                     <div class="status-value" id="entry-short-display">-</div>
                 </div>
                 <div class="status-item">
-                    <div class="status-label">Tempo de Monitoramento</div>
+                    <div class="status-label">TEMPO DE MONITORAMENTO</div>
                     <div class="status-value" id="operation-time">-</div>
                 </div>
                 <div class="status-item">
-                    <div class="status-label">Status</div>
-                    <div class="status-value" id="crossing-status">Aguardando...</div>
+                    <div class="status-label">STATUS</div>
+                    <div class="status-value" id="crossing-status">AGUARDANDO...</div>
                 </div>
             </div>
         </div>
 
         <div class="pnl-section">
-            <h3>💰 P&L Atual (com taxas)</h3>
-            <div class="pnl-label" id="pnl-label">Calculando...</div>
+            <h3>P&L ATUAL (COM TAXAS)</h3>
+            <div class="pnl-label" id="pnl-label">CALCULANDO...</div>
             <div class="pnl-display" id="pnl-value">0.00 USDT</div>
             <div class="pnl-display" id="pnl-percent">(0.00%)</div>
         </div>
@@ -455,19 +481,19 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="crossings-24h">0</div>
-                <div class="stat-label">Cruzamentos (24h)</div>
+                <div class="stat-label">CRUZAMENTOS (24H)</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="crossings-30min">0</div>
-                <div class="stat-label">Cruzamentos (30min)</div>
+                <div class="stat-label">CRUZAMENTOS (30MIN)</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="spot-volume">0</div>
-                <div class="stat-label">Volume SPOT (24h)</div>
+                <div class="stat-label">VOLUME SPOT (24H)</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="current-spread-percent">0.00%</div>
-                <div class="stat-label">Spread Atual</div>
+                <div class="stat-label">SPREAD ATUAL</div>
             </div>
         </div>
     </div>
@@ -517,7 +543,10 @@
                 currentSymbol = urlParams.get('symbol').toUpperCase();
             }
             
-            document.title = `Monitor ${currentSymbol} - Arbitragem`;
+            document.title = `MONITOR ${currentSymbol} - ARBITRAGEM`;
+            
+            // Atualiza o display da moeda atual
+            document.getElementById('current-symbol-display').textContent = currentSymbol;
             
             // Preenche preços automaticamente
             if (calculatorData && calculatorData.spotPrice && calculatorData.futurePrice) {
@@ -588,7 +617,7 @@
 
         function fillCurrentPrices() {
             if (!currentData) {
-                alert('Aguarde os dados carregarem...');
+                alert('AGUARDE OS DADOS CARREGAREM...');
                 return;
             }
             
@@ -604,17 +633,17 @@
             const shortPrice = parseFloat(document.getElementById('entry-short-price').value);
             
             if (!investmentAmount || !buyPrice || !shortPrice) {
-                alert('Por favor, preencha todos os campos antes de iniciar.');
+                alert('POR FAVOR, PREENCHA TODOS OS CAMPOS ANTES DE INICIAR.');
                 return;
             }
             
             if (buyPrice >= shortPrice) {
-                alert('O preço de compra deve ser menor que o preço de short para haver lucro.');
+                alert('O PRECO DE COMPRA DEVE SER MENOR QUE O PRECO DE SHORT PARA HAVER LUCRO.');
                 return;
             }
             
             if (!currentData) {
-                alert('Aguarde os dados carregarem completamente.');
+                alert('AGUARDE OS DADOS CARREGAREM COMPLETAMENTE.');
                 return;
             }
             
@@ -636,14 +665,14 @@
             
             const statusElement = document.getElementById('operation-status');
             statusElement.classList.add('active');
-            document.getElementById('status-message').textContent = '🔍 Monitorando cruzamento de preços...';
+            document.getElementById('status-message').textContent = 'MONITORANDO CRUZAMENTO DE PRECOS...';
             document.getElementById('status-grid').style.display = 'grid';
             
             document.getElementById('entry-buy-display').textContent = buyPrice.toFixed(8);
             document.getElementById('entry-short-display').textContent = shortPrice.toFixed(8);
-            document.getElementById('crossing-status').textContent = 'Aguardando...';
+            document.getElementById('crossing-status').textContent = 'AGUARDANDO...';
             
-            showNotification(`🚀 Monitoramento iniciado para ${currentSymbol}! Spread inicial: ${(((shortPrice - buyPrice) / buyPrice) * 100).toFixed(2)}%`);
+            showNotification(`MONITORAMENTO INICIADO PARA ${currentSymbol}! SPREAD INICIAL: ${(((shortPrice - buyPrice) / buyPrice) * 100).toFixed(2)}%`);
         }
 
         function stopOperation() {
@@ -661,13 +690,13 @@
             
             const statusElement = document.getElementById('operation-status');
             statusElement.classList.remove('active');
-            document.getElementById('status-message').textContent = 'Nenhuma operação sendo monitorada';
+            document.getElementById('status-message').textContent = 'NENHUMA OPERACAO SENDO MONITORADA';
             document.getElementById('status-grid').style.display = 'none';
             
             // Remove alerta se estiver visível
             document.getElementById('exit-alert').classList.remove('show');
             
-            showNotification('⏹️ Monitoramento parado');
+            showNotification('MONITORAMENTO PARADO');
         }
 
         function checkForCrossing(data) {
@@ -701,20 +730,20 @@
                 alertElement.classList.add('show', 'exit-alert');
                 
                 document.getElementById('exit-message').innerHTML = `
-                    <strong>🎯 CRUZAMENTO DETECTADO!</strong><br>
-                    ${currentSymbol}: Os preços de SPOT e FUTUROS se cruzaram!<br>
-                    <strong>P&L estimado: ${netPnL} USDT ${pnlPercent}</strong><br>
-                    <em>⚡ Feche suas posições AGORA para capturar o lucro!</em><br>
-                    <small>Clique em "PARAR MONITORAMENTO" após fechar as posições.</small>
+                    <strong>CRUZAMENTO DETECTADO!</strong><br>
+                    <strong>${currentSymbol}</strong>: OS PRECOS DE SPOT E FUTUROS SE CRUZARAM!<br>
+                    <strong>P&L ESTIMADO: ${netPnL} USDT ${pnlPercent}</strong><br>
+                    <em>FECHE SUAS POSICOES AGORA PARA CAPTURAR O LUCRO!</em><br>
+                    <small>CLIQUE EM "PARAR MONITORAMENTO" APOS FECHAR AS POSICOES.</small>
                 `;
                 
-                document.getElementById('crossing-status').textContent = '🎯 SAIR AGORA!';
+                document.getElementById('crossing-status').textContent = 'SAIR AGORA!';
                 document.getElementById('crossing-status').style.color = '#e74c3c';
                 
                 // Notificação do navegador
                 if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification(`🚨 ${currentSymbol} - CRUZAMENTO!`, {
-                        body: `Hora de sair! P&L estimado: ${netPnL} USDT ${pnlPercent}`,
+                    new Notification(`${currentSymbol} - CRUZAMENTO!`, {
+                        body: `HORA DE SAIR! P&L ESTIMADO: ${netPnL} USDT ${pnlPercent}`,
                         icon: '/favicon.ico',
                         requireInteraction: true,
                         tag: 'arbitrage-exit'
@@ -761,14 +790,14 @@
                     }, i * 300);
                 }
             } catch (e) {
-                console.log('Som de alerta não suportado');
+                console.log('SOM DE ALERTA NAO SUPORTADO');
             }
         }
 
         function showNotification(message) {
             console.log(message);
             if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('Monitor de Arbitragem', {
+                new Notification('MONITOR DE ARBITRAGEM', {
                     body: message,
                     icon: '/favicon.ico'
                 });
@@ -783,7 +812,7 @@
             // Usar os preços diretamente sem inverter
             document.getElementById('buy-exchange').textContent = spotExchange;
             document.getElementById('buy-price').textContent = spotPrice.toFixed(8);
-            document.getElementById('short-exchange').textContent = 'MEXC (Futuros)';
+            document.getElementById('short-exchange').textContent = 'MEXC (FUTUROS)';
             document.getElementById('short-price').textContent = futurePrice.toFixed(8);
             
             // Calcular spread corretamente
@@ -807,13 +836,13 @@
             // Atualiza análise da situação atual
             let analysisText;
             if (Math.abs(currentSpread) > 1) {
-                analysisText = `💡 ${currentSpread > 0 ? 'Excelente' : 'Boa'} oportunidade! Comprar SPOT em ${spotExchange} (${spotPrice.toFixed(8)}) e fazer Short em MEXC Futuros (${futurePrice.toFixed(8)}). Spread: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? '✅ Alta probabilidade de lucro!' : '⚠️ Spread negativo - futuros mais baratos.'}`;
+                analysisText = `${currentSpread > 0 ? 'EXCELENTE' : 'BOA'} OPORTUNIDADE! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM MEXC FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'ALTA PROBABILIDADE DE LUCRO!' : 'SPREAD NEGATIVO - FUTUROS MAIS BARATOS.'}`;
             } else if (Math.abs(currentSpread) > 0.5) {
-                analysisText = `💡 Oportunidade ${currentSpread > 0 ? 'moderada' : 'de spread negativo'}! Comprar SPOT em ${spotExchange} (${spotPrice.toFixed(8)}) e fazer Short em MEXC Futuros (${futurePrice.toFixed(8)}). Spread: ${currentSpread.toFixed(2)}%. ⚠️ ${currentSpread > 0 ? 'Oportunidade moderada.' : 'Futuros mais baratos que spot.'}`;
+                analysisText = `OPORTUNIDADE ${currentSpread > 0 ? 'MODERADA' : 'DE SPREAD NEGATIVO'}! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM MEXC FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'OPORTUNIDADE MODERADA.' : 'FUTUROS MAIS BARATOS QUE SPOT.'}`;
             } else if (Math.abs(currentSpread) > 0.1) {
-                analysisText = `💡 Oportunidade pequena. Comprar SPOT em ${spotExchange} (${spotPrice.toFixed(8)}) e fazer Short em MEXC Futuros (${futurePrice.toFixed(8)}). Spread: ${currentSpread.toFixed(2)}%. 💡 Considere o risco vs recompensa.`;
+                analysisText = `OPORTUNIDADE PEQUENA. COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM MEXC FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. CONSIDERE O RISCO VS RECOMPENSA.`;
             } else {
-                analysisText = `⚖️ Spread muito baixo (${currentSpread.toFixed(2)}%). Preços próximos: SPOT ${spotPrice.toFixed(8)} vs FUTURO ${futurePrice.toFixed(8)}. ⏳ Aguardar maior divergência.`;
+                analysisText = `SPREAD MUITO BAIXO (${currentSpread.toFixed(2)}%). PRECOS PROXIMOS: SPOT ${spotPrice.toFixed(8)} VS FUTURO ${futurePrice.toFixed(8)}. AGUARDAR MAIOR DIVERGENCIA.`;
             }
             
             document.getElementById('current-analysis').textContent = analysisText;
@@ -879,11 +908,11 @@
             pnlPercentElement.textContent = `(${profitPercent.toFixed(2)}%)`;
             
             if (netProfit >= 0) {
-                pnlLabelElement.textContent = '✅ LUCRO';
+                pnlLabelElement.textContent = 'LUCRO';
                 pnlValueElement.className = 'pnl-display profit-positive';
                 pnlPercentElement.className = 'pnl-display profit-positive';
             } else {
-                pnlLabelElement.textContent = '❌ PREJUÍZO';
+                pnlLabelElement.textContent = 'PREJUIZO';
                 pnlValueElement.className = 'pnl-display profit-negative';
                 pnlPercentElement.className = 'pnl-display profit-negative';
             }

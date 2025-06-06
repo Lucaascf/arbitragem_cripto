@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador de Criptomoedas</title>
+    <title>COMPARADOR DE CRIPTOMOEDAS</title>
     <style>
         .loading-spinner {
             display: inline-block;
@@ -27,6 +27,7 @@
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: #FFD700;
             min-height: 100vh;
+            text-transform: uppercase;
         }
         .container {
             max-width: 1200px;
@@ -152,6 +153,7 @@
             border-radius: 4px;
             flex-grow: 1;
             max-width: 300px;
+            text-transform: uppercase;
         }
         .filter-input::placeholder {
             color: #B8860B;
@@ -164,6 +166,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .filter-button:hover {
             background-color: #FFA500;
@@ -206,6 +209,7 @@
             cursor: pointer;
             font-size: 1rem;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .refresh-button:hover {
             background-color: #FFA500;
@@ -344,6 +348,7 @@
             color: #FFD700;
             border-radius: 4px;
             margin-bottom: 10px;
+            text-transform: uppercase;
         }
         .coin-search::placeholder {
             color: #B8860B;
@@ -360,6 +365,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .btn-primary {
             background-color: #FFD700;
@@ -385,6 +391,7 @@
             padding: 8px 15px;
             cursor: pointer;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .advanced-filter-button:hover {
             background-color: #FFA500;
@@ -445,6 +452,7 @@
             transition: background-color 0.3s;
             white-space: nowrap;
             font-weight: bold;
+            text-transform: uppercase;
         }
 
         .calculator-button:hover {
@@ -469,6 +477,7 @@
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.3s;
+            text-transform: uppercase;
         }
 
         .logout-btn:hover {
@@ -480,78 +489,78 @@
     <div class="container">
         <div class="header">
             <div class="user-menu">
-                <button onclick="logout()" class="logout-btn">🚪 Sair</button>
+                <button onclick="logout()" class="logout-btn">SAIR</button>
             </div>
             <svg class="logo" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <text x="10" y="45" font-size="36" font-weight="bold" fill="#FFD700">MT</text>
                 <text x="10" y="70" font-size="20" fill="#FFD700">CRYPTO</text>
             </svg>
-            <h1>Comparador de Criptomoedas</h1>
+            <h1>COMPARADOR DE CRIPTOMOEDAS</h1>
         </div>
-        <div class="last-updated">Dados atualizados automaticamente a cada <span id="refresh-interval">carregando...</span> segundos</div>
-        <div class="last-updated">Última atualização: <span id="update-time"></span></div>
+        <div class="last-updated">DADOS ATUALIZADOS AUTOMATICAMENTE A CADA <span id="refresh-interval">CARREGANDO...</span> SEGUNDOS</div>
+        <div class="last-updated">ULTIMA ATUALIZACAO: <span id="update-time"></span></div>
         
         <div class="stats">
             <div class="stat-card">
-                <div class="stat-label">Total de Moedas</div>
+                <div class="stat-label">TOTAL DE MOEDAS</div>
                 <div class="stat-value" id="total-coins">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Diferença Média</div>
+                <div class="stat-label">DIFERENCA MEDIA</div>
                 <div class="stat-value" id="avg-difference">0%</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Melhor Oportunidade</div>
+                <div class="stat-label">MELHOR OPORTUNIDADE</div>
                 <div class="stat-value" id="best-opportunity">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Cruzamentos (24h)</div>
+                <div class="stat-label">CRUZAMENTOS (24H)</div>
                 <div class="stat-value" id="total-crossings-24h">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Cruzamentos (30min)</div>
+                <div class="stat-label">CRUZAMENTOS (30MIN)</div>
                 <div class="stat-value" id="total-crossings-30min">0</div>
             </div>
         </div>
 
         <div class="filter-button-container">
-            <button id="advanced-filter-button" class="advanced-filter-button">Filtros Avançados</button>
+            <button id="advanced-filter-button" class="advanced-filter-button">FILTROS AVANCADOS</button>
         </div>
                 
         <div class="filter-container">
-            <input type="text" id="coin-filter" class="filter-input" placeholder="Filtrar por moeda (ex: BTC, ETH)...">
-            <button id="filter-button" class="filter-button">Filtrar</button>
+            <input type="text" id="coin-filter" class="filter-input" placeholder="FILTRAR POR MOEDA (EX: BTC, ETH)...">
+            <button id="filter-button" class="filter-button">FILTRAR</button>
             <select id="sort-filter" class="filter-input">
-                <option value="difference">Ordenar por diferença (padrão)</option>
-                <option value="crossings_24h">Ordenar por cruzamentos (24h)</option>
-                <option value="crossings_30min">Ordenar por cruzamentos (30min)</option>
-                <option value="volume">Ordenar por volume</option>
-                <option value="symbol">Ordenar por símbolo</option>
+                <option value="difference">ORDENAR POR DIFERENCA (PADRAO)</option>
+                <option value="crossings_24h">ORDENAR POR CRUZAMENTOS (24H)</option>
+                <option value="crossings_30min">ORDENAR POR CRUZAMENTOS (30MIN)</option>
+                <option value="volume">ORDENAR POR VOLUME</option>
+                <option value="symbol">ORDENAR POR SIMBOLO</option>
             </select>
             <select id="difference-filter" class="filter-input">
-                <option value="all">Todas as diferenças</option>
-                <option value="positive">Apenas positivas</option>
-                <option value="negative">Apenas negativas</option>
-                <option value="significant">Significativas (>2%)</option>
+                <option value="all">TODAS AS DIFERENCAS</option>
+                <option value="positive">APENAS POSITIVAS</option>
+                <option value="negative">APENAS NEGATIVAS</option>
+                <option value="significant">SIGNIFICATIVAS (>2%)</option>
             </select>
             <select id="volume-filter" class="filter-input">
-                <option value="all">Qualquer volume</option>
-                <option value="high">Alto volume (>1M)</option>
-                <option value="medium">Médio volume (>100K)</option>
+                <option value="all">QUALQUER VOLUME</option>
+                <option value="high">ALTO VOLUME (>1M)</option>
+                <option value="medium">MEDIO VOLUME (>100K)</option>
             </select>
             <select id="limit-filter" class="filter-input">
-                <option value="10">Mostrar 10</option>
-                <option value="25">Mostrar 25</option>
-                <option value="50">Mostrar 50</option>
-                <option value="all">Mostrar todas</option>
+                <option value="10">MOSTRAR 10</option>
+                <option value="25">MOSTRAR 25</option>
+                <option value="50">MOSTRAR 50</option>
+                <option value="all">MOSTRAR TODAS</option>
             </select>
         </div>
         
         <div id="coin-container">
-            <div class="loading">Carregando dados...</div>
+            <div class="loading">CARREGANDO DADOS...</div>
         </div>
 
-        <button id="refresh-button" class="refresh-button">Atualizar Dados</button>
+        <button id="refresh-button" class="refresh-button">ATUALIZAR DADOS</button>
     </div>
 
     <script>
@@ -609,7 +618,7 @@
                 
                 return config;
             } catch (error) {
-                console.error('Erro ao carregar configurações:', error);
+                console.error('ERRO AO CARREGAR CONFIGURACOES:', error);
                 // Mantém os valores padrão
                 document.getElementById('refresh-interval').textContent = AUTO_REFRESH_INTERVAL / 1000;
                 return null;
@@ -913,7 +922,7 @@
             spinner.className = 'loading-spinner';
             btn.innerHTML = '';
             btn.appendChild(spinner);
-            btn.appendChild(document.createTextNode(' Atualizando...'));
+            btn.appendChild(document.createTextNode(' ATUALIZANDO...'));
             btn.disabled = true;
             
             // Busca dados
@@ -925,7 +934,7 @@
 
         function fetchData() {
             const updateTimeElement = document.getElementById('update-time');
-            updateTimeElement.textContent = "Atualizando...";
+            updateTimeElement.textContent = "ATUALIZANDO...";
             
             // Adicionar timestamp para evitar cache do navegador
             const timestamp = new Date().getTime();
@@ -941,7 +950,7 @@
             })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Erro na rede');
+                        throw new Error('ERRO NA REDE');
                     }
                     return response.json();
                 })
@@ -971,8 +980,8 @@
                     return data;
                 })
                 .catch(error => {
-                    updateTimeElement.textContent = 'Erro ao atualizar';
-                    mostrarNotificacao('Erro ao buscar dados', 'error');
+                    updateTimeElement.textContent = 'ERRO AO ATUALIZAR';
+                    mostrarNotificacao('ERRO AO BUSCAR DADOS', 'error');
                 });
         }
         
@@ -989,7 +998,7 @@
             const container = document.getElementById('coin-container');
             
             if (!dados || dados.length === 0) {
-                container.innerHTML = '<div class="loading">Nenhum dado disponível</div>';
+                container.innerHTML = '<div class="loading">NENHUM DADO DISPONIVEL</div>';
                 return;
             }
             
@@ -1015,42 +1024,42 @@
                     <div class="coin-header">
                         <div class="coin-name">${simboloLimpo}
                             ${moeda.crossings_24h > 0 || moeda.crossings_30min > 0 ? 
-                                `<span class="crossing-badge" title="Cruzamentos recentes">${moeda.crossings_24h} | ${moeda.crossings_30min}</span>` : ''}
+                                `<span class="crossing-badge" title="CRUZAMENTOS RECENTES">${moeda.crossings_24h} | ${moeda.crossings_30min}</span>` : ''}
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div class="price-difference ${classeDiferenca}">
                                 ${diferenca > 0 ? '+' : ''}${diferenca.toFixed(2)}%
                             </div>
                             <button class="calculator-button" data-symbol="${simboloLimpo}" data-spot="${moeda.preco_spot}" data-future="${moeda.preco_futuros}" data-exchange="${moeda.corretora_spot}">
-                                Calculadora
+                                CALCULADORA
                             </button>
                         </div>
                     </div>
                     
                     <div class="price-grid">
                         <div class="price-item">
-                            <div class="price-label">Spot (${moeda.corretora_spot})</div>
+                            <div class="price-label">SPOT (${moeda.corretora_spot})</div>
                             <div class="price-value ${spotClass}">${moeda.preco_spot.toFixed(8)}</div>
                         </div>
                         <div class="price-item">
-                            <div class="price-label">Futuros (MEXC)</div>
+                            <div class="price-label">FUTUROS (MEXC)</div>
                             <div class="price-value ${futuresClass}">${moeda.preco_futuros.toFixed(8)}</div>
                         </div>
                         <div class="price-item">
-                            <div class="price-label">Volume Total (24h)</div>
+                            <div class="price-label">VOLUME TOTAL (24H)</div>
                             <div class="price-value volume-value">${volumeFormatado} USDT</div>
                         </div>
                         <div class="price-item">
-                            <div class="price-label">Arbitragem</div>
+                            <div class="price-label">ARBITRAGEM</div>
                             <div class="price-value ${classeDiferenca}">
-                                ${diferenca > 0 ? 'Prêmio nos futuros' : (diferenca < 0 ? 'Prêmio no spot' : 'Sem diferença')}
+                                ${diferenca > 0 ? 'PREMIO NOS FUTUROS' : (diferenca < 0 ? 'PREMIO NO SPOT' : 'SEM DIFERENCA')}
                             </div>
                         </div>
                         <div class="price-item">
-                            <div class="price-label">Cruzamentos</div>
+                            <div class="price-label">CRUZAMENTOS</div>
                             <div class="price-value">
-                                <span title="Últimas 24 horas">24h: ${moeda.crossings_24h || 0}</span> | 
-                                <span title="Últimos 30 minutos">30m: ${moeda.crossings_30min || 0}</span>
+                                <span title="ULTIMAS 24 HORAS">24H: ${moeda.crossings_24h || 0}</span> | 
+                                <span title="ULTIMOS 30 MINUTOS">30M: ${moeda.crossings_30min || 0}</span>
                             </div>
                         </div>
                     </div>
@@ -1099,7 +1108,7 @@
             // Melhor oportunidade
             const oportunidadesPositivas = dados.filter(moeda => moeda.diferenca > 0);
             
-            let melhorOportunidadeTexto = 'Nenhuma oportunidade';
+            let melhorOportunidadeTexto = 'NENHUMA OPORTUNIDADE';
             
             if (oportunidadesPositivas.length > 0) {
                 const melhorOportunidade = oportunidadesPositivas.reduce((melhor, atual) => 
@@ -1161,20 +1170,20 @@
     <div class="modal-overlay" id="filtros-avancados-modal">
     <div class="modal">
         <div class="modal-header">
-            <div class="modal-title">Filtros Avançados</div>
+            <div class="modal-title">FILTROS AVANCADOS</div>
             <button class="modal-close" id="modal-close">&times;</button>
         </div>
         <div class="modal-body">
             <div class="filter-section">
                 <div class="filter-row">
-                    <div class="filter-label">Lucro (%)</div>
+                    <div class="filter-label">LUCRO (%)</div>
                     <div class="range-inputs">
                         <div class="range-input">
-                            <label>Mínimo (%)</label>
+                            <label>MINIMO (%)</label>
                             <input type="number" id="lucro-minimo" class="filter-input" value="-10" min="-100" max="100">
                         </div>
                         <div class="range-input">
-                            <label>Máximo (%)</label>
+                            <label>MAXIMO (%)</label>
                             <input type="number" id="lucro-maximo" class="filter-input" value="100" min="-100" max="10000">
                         </div>
                     </div>
@@ -1182,41 +1191,41 @@
             </div>
 
             <div class="filter-section">
-                <div class="filter-label">Mostrar/ocultar corretora</div>
+                <div class="filter-label">MOSTRAR/OCULTAR CORRETORA</div>
                 <div class="filter-group">
                     <div class="exchange-checkbox">
                         <span class="colored-box"></span>
                         <input type="checkbox" id="mexc-spot" checked>
-                        <label for="mexc-spot">Mexc Spot</label>
+                        <label for="mexc-spot">MEXC SPOT</label>
                     </div>
                     <div class="exchange-checkbox">
                         <span class="colored-box"></span>
                         <input type="checkbox" id="gateio-spot" checked>
-                        <label for="gateio-spot">Gate.io Spot</label>
+                        <label for="gateio-spot">GATE.IO SPOT</label>
                     </div>
                     <div class="exchange-checkbox">
                         <span class="colored-box"></span>
                         <input type="checkbox" id="htx-spot" checked>
-                        <label for="htx-spot">HTX Spot</label>
+                        <label for="htx-spot">HTX SPOT</label>
                     </div>
                 </div>
             </div>
 
             <div class="filter-section">
-                <div class="filter-label">Selecionar moedas</div>
-                <input type="text" id="coin-search" class="coin-search" placeholder="Buscar moeda...">
+                <div class="filter-label">SELECIONAR MOEDAS</div>
+                <input type="text" id="coin-search" class="coin-search" placeholder="BUSCAR MOEDA...">
                 <div class="action-buttons">
-                    <button id="select-all-coins" class="btn btn-secondary">Selecionar Todos</button>
-                    <button id="deselect-all-coins" class="btn btn-secondary">Desmarcar Todos</button>
+                    <button id="select-all-coins" class="btn btn-secondary">SELECIONAR TODOS</button>
+                    <button id="deselect-all-coins" class="btn btn-secondary">DESMARCAR TODOS</button>
                 </div>
                 <div id="coin-grid" class="coin-grid">
-                    <!-- As moedas serão adicionadas aqui dinamicamente -->
+                    <!-- AS MOEDAS SERAO ADICIONADAS AQUI DINAMICAMENTE -->
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button id="reset-filters" class="btn btn-danger">Resetar Filtros</button>
-            <button id="apply-filters" class="btn btn-primary">Aplicar Filtros</button>
+            <button id="reset-filters" class="btn btn-danger">RESETAR FILTROS</button>
+            <button id="apply-filters" class="btn btn-primary">APLICAR FILTROS</button>
         </div>
     </div>
 </div>
