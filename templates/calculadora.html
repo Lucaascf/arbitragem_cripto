@@ -808,7 +808,7 @@
             // Usar os preços diretamente sem inverter
             document.getElementById('buy-exchange').textContent = spotExchange;
             document.getElementById('buy-price').textContent = spotPrice.toFixed(8);
-            document.getElementById('short-exchange').textContent = 'MEXC (FUTUROS)';
+            document.getElementById('short-exchange').textContent = `${data.corretora_futuros || 'MEXC'} (FUTUROS)`;
             document.getElementById('short-price').textContent = futurePrice.toFixed(8);
             
             // Calcular spread corretamente
@@ -832,11 +832,11 @@
             // Atualiza análise da situação atual
             let analysisText;
             if (Math.abs(currentSpread) > 1) {
-                analysisText = `${currentSpread > 0 ? 'EXCELENTE' : 'BOA'} OPORTUNIDADE! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM MEXC FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'ALTA PROBABILIDADE DE LUCRO!' : 'SPREAD NEGATIVO - FUTUROS MAIS BARATOS.'}`;
+                analysisText = `${currentSpread > 0 ? 'EXCELENTE' : 'BOA'} OPORTUNIDADE! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM ${data.corretora_futuros || 'MEXC'} FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'ALTA PROBABILIDADE DE LUCRO!' : 'SPREAD NEGATIVO - FUTUROS MAIS BARATOS.'}`;
             } else if (Math.abs(currentSpread) > 0.5) {
-                analysisText = `OPORTUNIDADE ${currentSpread > 0 ? 'MODERADA' : 'DE SPREAD NEGATIVO'}! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM MEXC FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'OPORTUNIDADE MODERADA.' : 'FUTUROS MAIS BARATOS QUE SPOT.'}`;
+                analysisText = `OPORTUNIDADE ${currentSpread > 0 ? 'MODERADA' : 'DE SPREAD NEGATIVO'}! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM ${data.corretora_futuros || 'MEXC'} FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'OPORTUNIDADE MODERADA.' : 'FUTUROS MAIS BARATOS QUE SPOT.'}`;
             } else if (Math.abs(currentSpread) > 0.1) {
-                analysisText = `OPORTUNIDADE PEQUENA. COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM MEXC FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. CONSIDERE O RISCO VS RECOMPENSA.`;
+                analysisText = `OPORTUNIDADE PEQUENA. COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM ${data.corretora_futuros || 'MEXC'} FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. CONSIDERE O RISCO VS RECOMPENSA.`;
             } else {
                 analysisText = `SPREAD MUITO BAIXO (${currentSpread.toFixed(2)}%). PRECOS PROXIMOS: SPOT ${spotPrice.toFixed(8)} VS FUTURO ${futurePrice.toFixed(8)}. AGUARDAR MAIOR DIVERGENCIA.`;
             }

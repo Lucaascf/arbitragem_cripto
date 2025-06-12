@@ -21,6 +21,37 @@ def fetch_gateio_tickers():
         print(f"Erro na API GateIO: {str(e)}")
         return {}
 
+def fetch_gateio_futures_tickers():
+    """Busca tickers de futuros da Gate.io"""
+    url = "https://api.gateio.ws/api/v4/futures/usdt/tickers"
+    headers = {"Accept": "application/json"}
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        dados = response.json()
+        
+        # Processa os dados dos futuros Gate.io
+        result = {}
+        for par in dados:
+            # O contrato vem como "BTC_USDT", convertemos para "BTCUSDT"
+            symbol = par['contract'].replace('_', '').upper()
+            
+            # Verifica se está na lista de moedas permitidas
+            if symbol in MOEDAS_PERMITIDAS:
+                try:
+                    result[symbol] = {
+                        'last': float(par['last']),
+                        'volume': float(par['volume_24h_quote'])  # Volume em USDT
+                    }
+                except (ValueError, KeyError):
+                    continue
+        
+        return result
+        
+    except Exception as e:
+        print(f"Erro na API GateIO Futuros: {str(e)}")
+        return {}
+
 def fetch_htx_tickers():
     """Busca tickers spot da HTX"""
     url = "https://api.huobi.pro/market/tickers"

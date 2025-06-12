@@ -7,6 +7,7 @@ from config import (
 )
 from services.api_services import (
     fetch_gateio_tickers,
+    fetch_gateio_futures_tickers,
     fetch_htx_tickers,
     fetch_mexc_spot_tickers,
     fetch_mexc_futures_tickers
@@ -23,15 +24,23 @@ class ComparisonService:
         """Compara preços spot e futuros, identificando oportunidades"""
         try:
             # Busca dados de todas as APIs
-            gateio = fetch_gateio_tickers()
+            gateio_spot = fetch_gateio_tickers()
+            gateio_futures = fetch_gateio_futures_tickers()
             htx = fetch_htx_tickers()
             mexc_spot = fetch_mexc_spot_tickers()
             mexc_futures = fetch_mexc_futures_tickers()
             
-            if not all([gateio, htx, mexc_spot, mexc_futures]):
-                raise Exception("Falha ao obter dados de uma ou mais APIs")
+            if not all([gateio_spot, htx, mexc_spot]):
+                raise Exception("Falha ao obter dados de uma ou mais APIs spot")
             
-            simbolos_com_futuros = set(mexc_futures.keys()).intersection(MOEDAS_PERMITIDAS)
+            # Combina dados de futuros de ambas as exchanges
+            all_futures_symbols = set()
+            if gateio_futures:
+                all_futures_symbols.update(gateio_futures.keys())
+            if mexc_futures:
+                all_futures_symbols.update(mexc_futures.keys())
+            
+            simbolos_com_futuros = all_futures_symbols.intersection(MOEDAS_PERMITIDAS)
             resultados = []
             now = datetime.now()
             
@@ -42,7 +51,7 @@ class ComparisonService:
                 for simbolo in sorted(simbolos_com_futuros):
                     try:
                         result = self._process_symbol(
-                            simbolo, gateio, htx, mexc_spot, mexc_futures, now
+                            simbolo, gateio_spot, gateio_futures, htx, mexc_spot, mexc_futures, now
                         )
                         if result:
                             resultados.append(result)
@@ -53,23 +62,25 @@ class ComparisonService:
             return resultados
             
         except Exception as e:
+            print(f"Erro no compare_prices: {str(e)}")
             return []
     
-    def _process_symbol(self, symbol, gateio, htx, mexc_spot, mexc_futures, now):
+    def _process_symbol(self, symbol, gateio_spot, gateio_futures, htx, mexc_spot, mexc_futures, now):
         """Processa um símbolo individual e retorna os dados comparativos"""
+        # Preços e volumes spot
         precos_spot = {
-            'GATEIO': gateio.get(symbol, {}).get('last'),
+            'GATEIO': gateio_spot.get(symbol, {}).get('last'),
             'HTX': htx.get(symbol, {}).get('last'),
             'MEXC': mexc_spot.get(symbol, {}).get('last')
         }
         
         volumes_spot = {
-            'GATEIO': gateio.get(symbol, {}).get('volume', 0),
+            'GATEIO': gateio_spot.get(symbol, {}).get('volume', 0),
             'HTX': htx.get(symbol, {}).get('volume', 0),
             'MEXC': mexc_spot.get(symbol, {}).get('volume', 0)
         }
         
-        # Filtra preços válidos (maiores que 0 e não nulos)
+        # Filtra preços spot válidos (maiores que 0 e não nulos)
         precos_validos = {k: v for k, v in precos_spot.items() if v is not None and v > 0}
         
         if not precos_validos:
@@ -80,14 +91,33 @@ class ComparisonService:
         menor_preco = precos_validos[corretora_menor]
         volume_spot = volumes_spot[corretora_menor]
         
-        # Obtém dados de futuros
-        futuros_data = mexc_futures.get(symbol, {})
-        preco_futuros = futuros_data.get('last')
-        volume_futuros = futuros_data.get('volume', 0)
+        # Compara preços de futuros entre Gate.io e MEXC
+        precos_futuros = {}
+        volumes_futuros = {}
         
-        if preco_futuros is None or preco_futuros <= 0:
+        # Adiciona dados do Gate.io Futuros se disponível
+        if gateio_futures and symbol in gateio_futures:
+            gateio_fut_data = gateio_futures[symbol]
+            if gateio_fut_data.get('last') and gateio_fut_data['last'] > 0:
+                precos_futuros['GATEIO'] = gateio_fut_data['last']
+                volumes_futuros['GATEIO'] = gateio_fut_data.get('volume', 0)
+        
+        # Adiciona dados do MEXC Futuros se disponível
+        if mexc_futures and symbol in mexc_futures:
+            mexc_fut_data = mexc_futures[symbol]
+            if mexc_fut_data.get('last') and mexc_fut_data['last'] > 0:
+                precos_futuros['MEXC'] = mexc_fut_data['last']
+                volumes_futuros['MEXC'] = mexc_fut_data.get('volume', 0)
+        
+        # Precisa ter pelo menos um preço de futuros válido
+        if not precos_futuros:
             return None
-            
+        
+        # Encontra o MAIOR preço de futuros (melhor para short)
+        corretora_futuros = max(precos_futuros, key=precos_futuros.get)
+        preco_futuros = precos_futuros[corretora_futuros]
+        volume_futuros = volumes_futuros[corretora_futuros]
+        
         try:
             # Calcula diferença percentual
             diferenca = ((preco_futuros - menor_preco) / menor_preco) * 100
@@ -102,6 +132,7 @@ class ComparisonService:
             'preco_spot': menor_preco,
             'preco_futuros': preco_futuros,
             'corretora_spot': corretora_menor,
+            'corretora_futuros': corretora_futuros,  # Nova informação
             'volume_spot': volume_spot,
             'volume_futuros': volume_futuros,
             'diferenca': diferenca,
