@@ -229,7 +229,29 @@
             font-weight: bold;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
-        
+
+        .exchange-link {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #FFD700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: all 0.3s;
+            display: inline-block;
+            margin-top: 3px;
+        }
+
+        .exchange-link:hover {
+            background-color: #FFD700;
+            color: #1a1a1a;
+            transform: scale(1.05);
+        }
+
+        .futures-filter-section {
+            margin-bottom: 25px;
+        }
+                
         @media (max-width: 768px) {
             .price-grid {
                 grid-template-columns: 1fr;
@@ -581,16 +603,19 @@
             limiteMoedas: '10' // Novo campo: valor padrão 10
         };
         
-        // Adicione aqui a nova variável ↓
         let filtrosAvancados = {
-            corretoras: {
+            corretorasSpot: {
                 'MEXC': true,
                 'GATEIO': true,
                 'HTX': true
             },
+            corretorasFuturos: {
+                'MEXC': true,
+                'GATEIO': true
+            },
             lucroMinimo: -10,
             lucroMaximo: 100,
-            moedasSelecionadas: {} // Será preenchido com todas as moedas disponíveis
+            moedasSelecionadas: {}
         };
 
         const CONSTANTS = {
@@ -683,6 +708,29 @@
                     fecharModalFiltrosAvancados();
                 }
             });
+
+        }
+
+        function gerarLinkCorretora(corretora, simbolo, tipoMercado = 'spot') {
+            const simboloLimpo = simbolo.replace(/USDT$/, '');
+            
+            const links = {
+                'MEXC': {
+                    'spot': `https://www.mexc.com/pt-BR/exchange/${simboloLimpo}_USDT`,
+                    'futures': `https://futures.mexc.com/pt-BR/exchange/${simboloLimpo}_USDT`
+                },
+                'GATEIO': {
+                    'spot': `https://www.gate.io/pt/trade/${simboloLimpo}_USDT`,
+                    'futures': `https://www.gate.io/pt/futures_trade/USDT/${simboloLimpo}_USDT`
+                },
+                'HTX': {
+                    'spot': `https://www.htx.com/trade/${simboloLimpo.toLowerCase()}_usdt/`
+                }
+            };
+            
+            return links[corretora] && links[corretora][tipoMercado] 
+                ? links[corretora][tipoMercado] 
+                : '#';
         }
         
         // Função para abrir o modal de filtros avançados
@@ -694,12 +742,26 @@
             document.getElementById('lucro-minimo').value = filtrosAvancados.lucroMinimo;
             document.getElementById('lucro-maximo').value = filtrosAvancados.lucroMaximo;
             
-            document.getElementById('mexc-spot').checked = filtrosAvancados.corretoras['MEXC'];
-            document.getElementById('gateio-spot').checked = filtrosAvancados.corretoras['GATEIO'];
-            document.getElementById('htx-spot').checked = filtrosAvancados.corretoras['HTX'];
+            document.getElementById('mexc-spot').checked = filtrosAvancados.corretorasSpot['MEXC'];
+            document.getElementById('gateio-spot').checked = filtrosAvancados.corretorasSpot['GATEIO'];
+            document.getElementById('htx-spot').checked = filtrosAvancados.corretorasSpot['HTX'];
+
+            document.getElementById('mexc-futures').checked = filtrosAvancados.corretorasFuturos['MEXC'];
+            document.getElementById('gateio-futures').checked = filtrosAvancados.corretorasFuturos['GATEIO'];
             
             // Exibir o modal
             document.getElementById('filtros-avancados-modal').style.display = 'flex';
+
+            // Event listeners que aplicam filtros sem fechar o modal
+            setTimeout(() => {
+                document.getElementById('mexc-spot').addEventListener('change', aplicarFiltrosSemFechar);
+                document.getElementById('gateio-spot').addEventListener('change', aplicarFiltrosSemFechar);
+                document.getElementById('htx-spot').addEventListener('change', aplicarFiltrosSemFechar);
+                document.getElementById('mexc-futures').addEventListener('change', aplicarFiltrosSemFechar);
+                document.getElementById('gateio-futures').addEventListener('change', aplicarFiltrosSemFechar);
+                document.getElementById('lucro-minimo').addEventListener('input', aplicarFiltrosSemFechar);
+                document.getElementById('lucro-maximo').addEventListener('input', aplicarFiltrosSemFechar);
+            }, 100);
         }
 
         // Função para popular a grid de moedas
@@ -782,9 +844,12 @@
         // Função para aplicar filtros avançados
         function aplicarFiltrosAvancados() {
             // Atualizar configurações de corretoras
-            filtrosAvancados.corretoras['MEXC'] = document.getElementById('mexc-spot').checked;
-            filtrosAvancados.corretoras['GATEIO'] = document.getElementById('gateio-spot').checked;
-            filtrosAvancados.corretoras['HTX'] = document.getElementById('htx-spot').checked;
+            filtrosAvancados.corretorasSpot['MEXC'] = document.getElementById('mexc-spot').checked;
+            filtrosAvancados.corretorasSpot['GATEIO'] = document.getElementById('gateio-spot').checked;
+            filtrosAvancados.corretorasSpot['HTX'] = document.getElementById('htx-spot').checked;
+
+            filtrosAvancados.corretorasFuturos['MEXC'] = document.getElementById('mexc-futures').checked;
+            filtrosAvancados.corretorasFuturos['GATEIO'] = document.getElementById('gateio-futures').checked;
             
             // Atualizar configurações de lucro
             filtrosAvancados.lucroMinimo = parseFloat(document.getElementById('lucro-minimo').value);
@@ -797,13 +862,34 @@
             fecharModalFiltrosAvancados();
         }
 
+        function aplicarFiltrosSemFechar() {
+            // Atualizar configurações de corretoras
+            filtrosAvancados.corretorasSpot['MEXC'] = document.getElementById('mexc-spot').checked;
+            filtrosAvancados.corretorasSpot['GATEIO'] = document.getElementById('gateio-spot').checked;
+            filtrosAvancados.corretorasSpot['HTX'] = document.getElementById('htx-spot').checked;
+
+            filtrosAvancados.corretorasFuturos['MEXC'] = document.getElementById('mexc-futures').checked;
+            filtrosAvancados.corretorasFuturos['GATEIO'] = document.getElementById('gateio-futures').checked;
+            
+            // Atualizar configurações de lucro
+            filtrosAvancados.lucroMinimo = parseFloat(document.getElementById('lucro-minimo').value);
+            filtrosAvancados.lucroMaximo = parseFloat(document.getElementById('lucro-maximo').value);
+            
+            // Aplicar filtros SEM fechar o modal
+            aplicarFiltrosEExibir();
+        }
+
         // Função para resetar os filtros avançados
         function resetarFiltrosAvancados() {
             filtrosAvancados = {
-                corretoras: {
+                corretorasSpot: {
                     'MEXC': true,
                     'GATEIO': true,
                     'HTX': true
+                },
+                corretorasFuturos: {
+                    'MEXC': true,
+                    'GATEIO': true
                 },
                 lucroMinimo: -10,
                 lucroMaximo: 100,
@@ -822,7 +908,10 @@
             document.getElementById('mexc-spot').checked = true;
             document.getElementById('gateio-spot').checked = true;
             document.getElementById('htx-spot').checked = true;
-            
+
+            document.getElementById('mexc-futures').checked = true;
+            document.getElementById('gateio-futures').checked = true;
+                
             // Atualizar grid de moedas
             popularGridMoedas();
         }
@@ -851,13 +940,14 @@
                 else if (filtrosAtivos.volume === 'medium') volumeMatch = volumeTotal >= CONSTANTS.VOLUME_THRESHOLD.MEDIUM;
                 
                 // Filtros avançados
-                const corretoraMatch = filtrosAvancados.corretoras[moeda.corretora_spot];
+                const corretoraSpotMatch = filtrosAvancados.corretorasSpot[moeda.corretora_spot];
+                const corretoraFuturesMatch = filtrosAvancados.corretorasFuturos[moeda.corretora_futuros || 'MEXC'];
                 const moedaSelecionada = filtrosAvancados.moedasSelecionadas[moeda.simbolo] !== false;
                 const lucroMinMatch = moeda.diferenca >= filtrosAvancados.lucroMinimo;
                 const lucroMaxMatch = moeda.diferenca <= filtrosAvancados.lucroMaximo;
                 
                 return moedaMatch && diferencaMatch && volumeMatch && 
-                    corretoraMatch && moedaSelecionada && lucroMinMatch && lucroMaxMatch;
+                    corretoraSpotMatch && corretoraFuturesMatch && moedaSelecionada && lucroMinMatch && lucroMaxMatch;
             });
             
             // CORREÇÃO: Ordena com PRIORIDADE SEMPRE para diferenças positivas
@@ -1016,6 +1106,10 @@
                 
                 const card = document.createElement('div');
                 card.className = 'coin-card';
+
+                const linkSpot = gerarLinkCorretora(moeda.corretora_spot, moeda.simbolo, 'spot');
+                const linkFuturos = gerarLinkCorretora(moeda.corretora_futuros || 'MEXC', moeda.simbolo, 'futures');
+
                 card.innerHTML = `
                     <div class="coin-header">
                         <div class="coin-name">${simboloLimpo}
@@ -1034,12 +1128,14 @@
                     
                     <div class="price-grid">
                         <div class="price-item">
-                            <div class="price-label">SPOT (${moeda.corretora_spot})</div>
+                            <div class="price-label">${moeda.tipo_compra || 'SPOT'} (${moeda.corretora_spot})</div>
                             <div class="price-value ${spotClass}">${moeda.preco_spot.toFixed(8)}</div>
+                            <a href="${linkSpot}" target="_blank" class="exchange-link">ABRIR ${moeda.corretora_spot}</a>
                         </div>
                         <div class="price-item">
                             <div class="price-label">FUTUROS (${moeda.corretora_futuros || 'MEXC'})</div>
                             <div class="price-value ${futuresClass}">${moeda.preco_futuros.toFixed(8)}</div>
+                            <a href="${linkFuturos}" target="_blank" class="exchange-link">ABRIR ${moeda.corretora_futuros || 'MEXC'}</a>
                         </div>
                         <div class="price-item">
                             <div class="price-label">VOLUME TOTAL (24H)</div>
@@ -1187,25 +1283,41 @@
             </div>
 
             <div class="filter-section">
-                <div class="filter-label">MOSTRAR/OCULTAR CORRETORA</div>
-                <div class="filter-group">
-                    <div class="exchange-checkbox">
-                        <span class="colored-box"></span>
-                        <input type="checkbox" id="mexc-spot" checked>
-                        <label for="mexc-spot">MEXC SPOT</label>
-                    </div>
-                    <div class="exchange-checkbox">
-                        <span class="colored-box"></span>
-                        <input type="checkbox" id="gateio-spot" checked>
-                        <label for="gateio-spot">GATE.IO SPOT</label>
-                    </div>
-                    <div class="exchange-checkbox">
-                        <span class="colored-box"></span>
-                        <input type="checkbox" id="htx-spot" checked>
-                        <label for="htx-spot">HTX SPOT</label>
-                    </div>
+            <div class="filter-label">MOSTRAR/OCULTAR CORRETORA SPOT</div>
+            <div class="filter-group">
+                <div class="exchange-checkbox">
+                    <span class="colored-box"></span>
+                    <input type="checkbox" id="mexc-spot" checked>
+                    <label for="mexc-spot">MEXC SPOT</label>
+                </div>
+                <div class="exchange-checkbox">
+                    <span class="colored-box"></span>
+                    <input type="checkbox" id="gateio-spot" checked>
+                    <label for="gateio-spot">GATE.IO SPOT</label>
+                </div>
+                <div class="exchange-checkbox">
+                    <span class="colored-box"></span>
+                    <input type="checkbox" id="htx-spot" checked>
+                    <label for="htx-spot">HTX SPOT</label>
                 </div>
             </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-label">MOSTRAR/OCULTAR CORRETORA FUTUROS</div>
+            <div class="filter-group">
+                <div class="exchange-checkbox">
+                    <span class="colored-box"></span>
+                    <input type="checkbox" id="mexc-futures" checked>
+                    <label for="mexc-futures">MEXC FUTUROS</label>
+                </div>
+                <div class="exchange-checkbox">
+                    <span class="colored-box"></span>
+                    <input type="checkbox" id="gateio-futures" checked>
+                    <label for="gateio-futures">GATE.IO FUTUROS</label>
+                </div>
+            </div>
+        </div>
 
             <div class="filter-section">
                 <div class="filter-label">SELECIONAR MOEDAS</div>

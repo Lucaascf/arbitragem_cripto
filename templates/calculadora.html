@@ -343,6 +343,27 @@
             text-align: center;
             margin: 20px 0;
         }
+        .exchange-link {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #FFD700;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            display: inline-block;
+            margin-top: 10px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .exchange-link:hover {
+            background-color: #FFD700;
+            color: #1a1a1a;
+            transform: scale(1.05);
+        }
+
         @media (max-width: 768px) {
             .arbitrage-section {
                 grid-template-columns: 1fr;
@@ -398,17 +419,19 @@
 
         <div class="arbitrage-section">
             <div class="action-card buy-card">
-                <div class="card-title">COMPRAR SPOT</div>
+                <div class="card-title" id="buy-card-title">COMPRAR SPOT</div>
                 <div class="exchange-name" id="buy-exchange">-</div>
                 <div class="price-display buy-price" id="buy-price">0.00000000</div>
                 <div style="font-size: 0.9em; color: #27ae60;">MENOR PRECO ATUAL</div>
+                <a href="#" target="_blank" class="exchange-link" id="buy-exchange-link">ABRIR CORRETORA</a>
             </div>
-            
+
             <div class="action-card sell-card">
                 <div class="card-title">ABRIR SHORT</div>
                 <div class="exchange-name" id="short-exchange">-</div>
                 <div class="price-display sell-price" id="short-price">0.00000000</div>
                 <div style="font-size: 0.9em; color: #e74c3c;">MAIOR PRECO ATUAL</div>
+                <a href="#" target="_blank" class="exchange-link" id="short-exchange-link">ABRIR CORRETORA</a>
             </div>
             
             <div class="action-card" id="result-card">
@@ -433,6 +456,13 @@
                 <div class="form-group">
                     <label for="entry-short-price">PRECO DE ENTRADA - SHORT:</label>
                     <input type="number" id="entry-short-price" step="0.00000001" min="0" max="100000" placeholder="EX: 0.12456789">
+                </div>
+                <div class="form-group">
+                    <label for="buy-type">TIPO DE COMPRA EXECUTADA:</label>
+                    <select id="buy-type" style="padding: 10px; border: 1px solid #FFD700; background: #2d2d2d; color: #FFD700; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px;">
+                        <option value="spot">COMPREI SPOT</option>
+                        <option value="futures">COMPREI FUTUROS</option>
+                    </select>
                 </div>
             </div>
 
@@ -497,7 +527,7 @@
     <script>
         let currentSymbol = 'REQ';
         let currentData = null;
-        const AUTO_REFRESH_INTERVAL = 2000; // 2 segundos conforme config.py
+        const AUTO_REFRESH_INTERVAL = 1000; // 1 segundos conforme config.py
         const CROSSING_THRESHOLD = 0.05;
         
         // Estado da operação
@@ -570,6 +600,7 @@
             document.getElementById('investment-amount').addEventListener('input', calculateCurrentPnL);
             document.getElementById('entry-buy-price').addEventListener('input', calculateCurrentPnL);
             document.getElementById('entry-short-price').addEventListener('input', calculateCurrentPnL);
+            document.getElementById('buy-type').addEventListener('change', calculateCurrentPnL);
             document.getElementById('fill-current-btn').addEventListener('click', fillCurrentPrices);
             document.getElementById('start-operation-btn').addEventListener('click', startOperation);
             document.getElementById('stop-operation-btn').addEventListener('click', stopOperation);
@@ -609,6 +640,28 @@
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
             }
+        }
+
+        function gerarLinkCorretora(corretora, simbolo, tipoMercado = 'spot') {
+            const simboloLimpo = simbolo.replace(/USDT$/, '');
+            
+            const links = {
+                'MEXC': {
+                    'spot': `https://www.mexc.com/pt-BR/exchange/${simboloLimpo}_USDT`,
+                    'futures': `https://futures.mexc.com/pt-BR/exchange/${simboloLimpo}_USDT`
+                },
+                'GATEIO': {
+                    'spot': `https://www.gate.io/pt/trade/${simboloLimpo}_USDT`,
+                    'futures': `https://www.gate.io/pt/futures_trade/USDT/${simboloLimpo}_USDT`
+                },
+                'HTX': {
+                    'spot': `https://www.htx.com/trade/${simboloLimpo.toLowerCase()}_usdt/`
+                }
+            };
+            
+            return links[corretora] && links[corretora][tipoMercado] 
+                ? links[corretora][tipoMercado] 
+                : '#';
         }
 
         function fillCurrentPrices() {
@@ -804,9 +857,12 @@
             const spotPrice = data.preco_spot;
             const futurePrice = data.preco_futuros;
             const spotExchange = data.corretora_spot;
+
+            const tipoCompra = data.tipo_compra || 'SPOT';
+            document.getElementById('buy-card-title').textContent = `COMPRAR ${tipoCompra}`;
             
             // Usar os preços diretamente sem inverter
-            document.getElementById('buy-exchange').textContent = spotExchange;
+            document.getElementById('buy-exchange').textContent = `${spotExchange} (${tipoCompra})`;
             document.getElementById('buy-price').textContent = spotPrice.toFixed(8);
             document.getElementById('short-exchange').textContent = `${data.corretora_futuros || 'MEXC'} (FUTUROS)`;
             document.getElementById('short-price').textContent = futurePrice.toFixed(8);
@@ -832,16 +888,24 @@
             // Atualiza análise da situação atual
             let analysisText;
             if (Math.abs(currentSpread) > 1) {
-                analysisText = `${currentSpread > 0 ? 'EXCELENTE' : 'BOA'} OPORTUNIDADE! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM ${data.corretora_futuros || 'MEXC'} FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'ALTA PROBABILIDADE DE LUCRO!' : 'SPREAD NEGATIVO - FUTUROS MAIS BARATOS.'}`;
+                analysisText = `EXCELENTE OPORTUNIDADE! COMPRAR ${data.tipo_compra || 'SPOT'} EM ${spotExchange} (${spotPrice.toFixed(8)}) E SHORT FUTUROS EM ${data.corretora_futuros} (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%.`;
             } else if (Math.abs(currentSpread) > 0.5) {
-                analysisText = `OPORTUNIDADE ${currentSpread > 0 ? 'MODERADA' : 'DE SPREAD NEGATIVO'}! COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM ${data.corretora_futuros || 'MEXC'} FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. ${currentSpread > 0 ? 'OPORTUNIDADE MODERADA.' : 'FUTUROS MAIS BARATOS QUE SPOT.'}`;
-            } else if (Math.abs(currentSpread) > 0.1) {
-                analysisText = `OPORTUNIDADE PEQUENA. COMPRAR SPOT EM ${spotExchange} (${spotPrice.toFixed(8)}) E FAZER SHORT EM ${data.corretora_futuros || 'MEXC'} FUTUROS (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%. CONSIDERE O RISCO VS RECOMPENSA.`;
+                analysisText = `OPORTUNIDADE MODERADA! COMPRAR ${data.tipo_compra || 'SPOT'} EM ${spotExchange} (${spotPrice.toFixed(8)}) E SHORT FUTUROS EM ${data.corretora_futuros} (${futurePrice.toFixed(8)}). SPREAD: ${currentSpread.toFixed(2)}%.`;
             } else {
-                analysisText = `SPREAD MUITO BAIXO (${currentSpread.toFixed(2)}%). PRECOS PROXIMOS: SPOT ${spotPrice.toFixed(8)} VS FUTURO ${futurePrice.toFixed(8)}. AGUARDAR MAIOR DIVERGENCIA.`;
+                analysisText = `SPREAD BAIXO (${currentSpread.toFixed(2)}%). AGUARDAR MAIOR DIVERGÊNCIA.`;
             }
             
             document.getElementById('current-analysis').textContent = analysisText;
+
+            // Atualizar links das corretoras
+            const linkSpot = gerarLinkCorretora(spotExchange, currentSymbol + 'USDT', 'spot');
+            const linkFuturos = gerarLinkCorretora(data.corretora_futuros || 'MEXC', currentSymbol + 'USDT', 'futures');
+
+            document.getElementById('buy-exchange-link').href = linkSpot;
+            document.getElementById('buy-exchange-link').textContent = `ABRIR ${spotExchange}`;
+
+            document.getElementById('short-exchange-link').href = linkFuturos;
+            document.getElementById('short-exchange-link').textContent = `ABRIR ${data.corretora_futuros || 'MEXC'}`;
         }
 
         function updateStats(data) {
@@ -860,39 +924,34 @@
             const entryBuyPrice = parseFloat(document.getElementById('entry-buy-price').value) || 0;
             const entryShortPrice = parseFloat(document.getElementById('entry-short-price').value) || 0;
             const investmentAmount = parseFloat(document.getElementById('investment-amount').value) || 0;
+            const buyType = document.getElementById('buy-type').value; // spot ou futures
             
-            // Reseta para zero se não houver operação ativa
-            if (!operationActive) {
+            if (!operationActive || !entryBuyPrice || !entryShortPrice || !investmentAmount || !currentData) {
                 updatePnLDisplay(0, 0);
                 return;
             }
 
-            // Verifica dados mínimos
-            if (!entryBuyPrice || !entryShortPrice || !investmentAmount || !currentData) {
-                updatePnLDisplay(0, 0);
-                return;
-            }
-
-            // 1. Calcula o spread INICIAL (lucro máximo potencial)
-            const initialSpread = entryShortPrice - entryBuyPrice;
+            // Quantidade baseada no investimento
+            const quantityBought = investmentAmount / entryBuyPrice;
             
-            // 2. Calcula o spread ATUAL
-            const currentSpread = currentData.preco_futuros - currentData.preco_spot;
-            
-            // 3. Progresso do trade (0% a 100%)
-            let progress = 0;
-            if (initialSpread > 0) {
-                progress = 1 - (currentSpread / initialSpread);
-                progress = Math.max(0, Math.min(1, progress)); // Limita entre 0% e 100%
+            // P&L baseado no tipo de compra que você realmente fez
+            let buyPositionPnL;
+            if (buyType === 'spot') {
+                buyPositionPnL = (currentData.preco_spot - entryBuyPrice) * quantityBought;
+            } else {
+                buyPositionPnL = (currentData.preco_futuros - entryBuyPrice) * quantityBought;
             }
             
-            // 4. Lucro proporcional ao progresso
-            const grossProfit = initialSpread * (investmentAmount / entryBuyPrice) * progress;
-            const totalFees = investmentAmount * 0.0024; // Taxas fixas
-            const netProfit = grossProfit - totalFees;
-            const profitPercent = (netProfit / investmentAmount) * 100;
+            // P&L do SHORT (sempre futuros)
+            const shortPositionPnL = (entryShortPrice - currentData.preco_futuros) * quantityBought;
+            
+            // P&L total
+            const grossPnL = buyPositionPnL + shortPositionPnL;
+            const totalFees = investmentAmount * 0.0024;
+            const netPnL = grossPnL - totalFees;
+            const pnLPercent = (netPnL / investmentAmount) * 100;
 
-            updatePnLDisplay(netProfit, profitPercent);
+            updatePnLDisplay(netPnL, pnLPercent);
         }
 
         function updatePnLDisplay(netProfit, profitPercent) {

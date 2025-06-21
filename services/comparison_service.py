@@ -67,60 +67,75 @@ class ComparisonService:
     
     def _process_symbol(self, symbol, gateio_spot, gateio_futures, htx, mexc_spot, mexc_futures, now):
         """Processa um símbolo individual e retorna os dados comparativos"""
-        # Preços e volumes spot
-        precos_spot = {
-            'GATEIO': gateio_spot.get(symbol, {}).get('last'),
-            'HTX': htx.get(symbol, {}).get('last'),
-            'MEXC': mexc_spot.get(symbol, {}).get('last')
-        }
+        # Preços e volumes para COMPRA (spot + futuros)
+        precos_compra = {}
+        volumes_compra = {}
         
-        volumes_spot = {
-            'GATEIO': gateio_spot.get(symbol, {}).get('volume', 0),
-            'HTX': htx.get(symbol, {}).get('volume', 0),
-            'MEXC': mexc_spot.get(symbol, {}).get('volume', 0)
-        }
+        # Adiciona preços SPOT
+        if gateio_spot.get(symbol):
+            data = gateio_spot[symbol]
+            if data.get('last') and data['last'] > 0:
+                precos_compra['GATEIO'] = data['last']
+                volumes_compra['GATEIO'] = data.get('volume', 0)
         
-        # Filtra preços spot válidos (maiores que 0 e não nulos)
-        precos_validos = {k: v for k, v in precos_spot.items() if v is not None and v > 0}
+        if htx.get(symbol):
+            data = htx[symbol]
+            if data.get('last') and data['last'] > 0:
+                precos_compra['HTX'] = data['last']
+                volumes_compra['HTX'] = data.get('volume', 0)
         
-        if not precos_validos:
-            return None
-            
-        # Encontra o menor preço spot
-        corretora_menor = min(precos_validos, key=precos_validos.get)
-        menor_preco = precos_validos[corretora_menor]
-        volume_spot = volumes_spot[corretora_menor]
+        if mexc_spot.get(symbol):
+            data = mexc_spot[symbol]
+            if data.get('last') and data['last'] > 0:
+                precos_compra['MEXC'] = data['last']
+                volumes_compra['MEXC'] = data.get('volume', 0)
         
-        # Compara preços de futuros entre Gate.io e MEXC
+        # Adiciona preços FUTUROS para compra também
+        if gateio_futures and symbol in gateio_futures:
+            data = gateio_futures[symbol]
+            if data.get('last') and data['last'] > 0:
+                precos_compra['GATEIO_FUTURES'] = data['last']
+                volumes_compra['GATEIO_FUTURES'] = data.get('volume', 0)
+        
+        if mexc_futures and symbol in mexc_futures:
+            data = mexc_futures[symbol]
+            if data.get('last') and data['last'] > 0:
+                precos_compra['MEXC_FUTURES'] = data['last']
+                volumes_compra['MEXC_FUTURES'] = data.get('volume', 0)
+        
+        # Preços de futuros para SHORT (apenas futuros)
         precos_futuros = {}
         volumes_futuros = {}
         
-        # Adiciona dados do Gate.io Futuros se disponível
         if gateio_futures and symbol in gateio_futures:
-            gateio_fut_data = gateio_futures[symbol]
-            if gateio_fut_data.get('last') and gateio_fut_data['last'] > 0:
-                precos_futuros['GATEIO'] = gateio_fut_data['last']
-                volumes_futuros['GATEIO'] = gateio_fut_data.get('volume', 0)
+            data = gateio_futures[symbol]
+            if data.get('last') and data['last'] > 0:
+                precos_futuros['GATEIO'] = data['last']
+                volumes_futuros['GATEIO'] = data.get('volume', 0)
         
-        # Adiciona dados do MEXC Futuros se disponível
         if mexc_futures and symbol in mexc_futures:
-            mexc_fut_data = mexc_futures[symbol]
-            if mexc_fut_data.get('last') and mexc_fut_data['last'] > 0:
-                precos_futuros['MEXC'] = mexc_fut_data['last']
-                volumes_futuros['MEXC'] = mexc_fut_data.get('volume', 0)
+            data = mexc_futures[symbol]
+            if data.get('last') and data['last'] > 0:
+                precos_futuros['MEXC'] = data['last']
+                volumes_futuros['MEXC'] = data.get('volume', 0)
         
-        # Precisa ter pelo menos um preço de futuros válido
-        if not precos_futuros:
+        # Validações
+        if not precos_compra or not precos_futuros:
             return None
         
-        # Encontra o MAIOR preço de futuros (melhor para short)
-        corretora_futuros = max(precos_futuros, key=precos_futuros.get)
-        preco_futuros = precos_futuros[corretora_futuros]
-        volume_futuros = volumes_futuros[corretora_futuros]
+        # Encontra o MENOR preço para compra (pode ser spot ou futuros)
+        corretora_compra = min(precos_compra, key=precos_compra.get)
+        preco_compra = precos_compra[corretora_compra]
+        volume_compra = volumes_compra[corretora_compra]
+        
+        # Encontra o MAIOR preço de futuros para short
+        corretora_short = max(precos_futuros, key=precos_futuros.get)
+        preco_short = precos_futuros[corretora_short]
+        volume_short = volumes_futuros[corretora_short]
         
         try:
             # Calcula diferença percentual
-            diferenca = ((preco_futuros - menor_preco) / menor_preco) * 100
+            diferenca = ((preco_short - preco_compra) / preco_compra) * 100
         except ZeroDivisionError:
             return None
         
@@ -129,12 +144,13 @@ class ComparisonService:
         
         return {
             'simbolo': symbol,
-            'preco_spot': menor_preco,
-            'preco_futuros': preco_futuros,
-            'corretora_spot': corretora_menor,
-            'corretora_futuros': corretora_futuros,  # Nova informação
-            'volume_spot': volume_spot,
-            'volume_futuros': volume_futuros,
+            'preco_spot': preco_compra,
+            'preco_futuros': preco_short,
+            'corretora_spot': corretora_compra.replace('_FUTURES', ''),
+            'corretora_futuros': corretora_short,
+            'tipo_compra': 'FUTUROS' if '_FUTURES' in corretora_compra else 'SPOT',
+            'volume_spot': volume_compra,
+            'volume_futuros': volume_short,
             'diferenca': diferenca,
             'crossings_24h': self.crossings_24h.get(symbol, {'count': 0})['count'],
             'crossings_30min': self.crossings_30min.get(symbol, {'count': 0})['count']

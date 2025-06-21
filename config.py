@@ -16,7 +16,7 @@ PORT = int(os.getenv('PORT', 5000))
 DATABASE_PATH = os.getenv('DATABASE_PATH', 'database.db')
 
 # Configurações técnicas
-UPDATE_INTERVAL = int(os.getenv('UPDATE_INTERVAL', 2))
+UPDATE_INTERVAL = int(os.getenv('UPDATE_INTERVAL', 1))
 CROSSING_THRESHOLD = float(os.getenv('CROSSING_THRESHOLD', 0.05))
 CROSSING_WINDOW_30MIN = 1800
 
